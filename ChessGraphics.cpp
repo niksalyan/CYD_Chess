@@ -7,44 +7,113 @@ namespace ChessGraphics {
     return isWhite(piece) ? piece + ('a' - 'A') : piece;
   }
 
+  void drawKing(Adafruit_ILI9341 &tft, int x, int y, int size, uint16_t fill, uint16_t outline) {
+    // Cross on top
+    tft.drawFastVLine(x, y - size - 2, 3, outline);
+    tft.drawFastHLine(x - 1, y - size - 1, 3, outline);
+    // Crown base
+    tft.fillRect(x - size + 2, y - 4, 2 * size - 4, size - 2, fill);
+    tft.drawRect(x - size + 2, y - 4, 2 * size - 4, size - 2, outline);
+    // Base
+    tft.drawFastHLine(x - size, y + size - 2, 2 * size, outline);
+  }
+
+  void drawQueen(Adafruit_ILI9341 &tft, int x, int y, int size, uint16_t fill, uint16_t outline) {
+    // Crown with multiple points
+    for (int i = -2; i <= 2; i++) {
+      tft.drawLine(x + i * 2, y - size - 1, x + i * 2 - 1, y - size + 2, outline);
+      tft.drawLine(x + i * 2, y - size - 1, x + i * 2 + 1, y - size + 2, outline);
+    }
+    // Crown base
+    tft.fillRect(x - size + 2, y - 3, 2 * size - 4, size - 1, fill);
+    tft.drawRect(x - size + 2, y - 3, 2 * size - 4, size - 1, outline);
+    // Base
+    tft.drawFastHLine(x - size, y + size - 2, 2 * size, outline);
+  }
+
+  void drawRook(Adafruit_ILI9341 &tft, int x, int y, int size, uint16_t fill, uint16_t outline) {
+    // Crenellations on top
+    for (int i = -1; i <= 1; i++) {
+      tft.drawFastVLine(x + i * size / 2, y - size - 1, 2, outline);
+    }
+    // Main body
+    tft.fillRect(x - size + 2, y - 3, 2 * size - 4, size - 1, fill);
+    tft.drawRect(x - size + 2, y - 3, 2 * size - 4, size - 1, outline);
+    // Base
+    tft.drawFastHLine(x - size, y + size - 2, 2 * size, outline);
+  }
+
+  void drawBishop(Adafruit_ILI9341 &tft, int x, int y, int size, uint16_t fill, uint16_t outline) {
+    // Pointed top
+    tft.drawLine(x - 2, y - size, x, y - size - 2, outline);
+    tft.drawLine(x + 2, y - size, x, y - size - 2, outline);
+    // Body
+    tft.fillRect(x - size + 2, y - 2, 2 * size - 4, size - 2, fill);
+    tft.drawRect(x - size + 2, y - 2, 2 * size - 4, size - 2, outline);
+    // Slit in middle
+    tft.drawFastHLine(x - size / 2, y + 1, size, outline);
+    // Base
+    tft.drawFastHLine(x - size, y + size - 1, 2 * size, outline);
+  }
+
+  void drawKnight(Adafruit_ILI9341 &tft, int x, int y, int size, uint16_t fill, uint16_t outline) {
+    // Horse head shape - simplified
+    tft.drawLine(x - size + 2, y - size, x - size / 2, y - size - 2, outline);
+    tft.drawLine(x - size / 2, y - size - 2, x, y - size, outline);
+    tft.drawLine(x, y - size, x + 1, y + 1, outline);
+    // Body
+    tft.fillRect(x - size + 2, y - 1, 2 * size - 4, size - 1, fill);
+    tft.drawRect(x - size + 2, y - 1, 2 * size - 4, size - 1, outline);
+    // Base
+    tft.drawFastHLine(x - size, y + size - 1, 2 * size, outline);
+  }
+
+  void drawPawn(Adafruit_ILI9341 &tft, int x, int y, int size, uint16_t fill, uint16_t outline) {
+    // Small head on top
+    tft.fillCircle(x, y - size, size / 3, fill);
+    tft.drawCircle(x, y - size, size / 3, outline);
+    // Neck
+    tft.drawFastVLine(x, y - size + size / 3, size / 3, outline);
+    // Body
+    tft.fillRect(x - size / 2, y - size / 3, size, size / 2, fill);
+    tft.drawRect(x - size / 2, y - size / 3, size, size / 2, outline);
+    // Base
+    tft.drawFastHLine(x - size, y + size / 3, 2 * size, outline);
+  }
+
   void drawPiece(Adafruit_ILI9341 &tft, char piece, int x, int y, int size) {
     if (!piece) return;
 
     bool white = isWhite(piece);
-    uint16_t fillColor = white ? ILI9341_WHITE : 0x1082;       // Light or dark fill
-    uint16_t outlineColor = white ? 0x7BEF : ILI9341_BLACK;     // Dark or light outline
-    uint16_t textColor = white ? 0x0841 : ILI9341_WHITE;        // Text color (contrasting)
+    uint16_t fillColor = white ? ILI9341_WHITE : 0x1082;        // Light or dark fill
+    uint16_t outlineColor = white ? 0x7BEF : ILI9341_BLACK;      // Dark or light outline
 
     char kind = lowerPiece(piece);
 
-    // Draw base circle for the piece
-    tft.fillCircle(x, y, size, fillColor);
-    tft.drawCircle(x, y, size, outlineColor);
+    // Draw background circle
+    tft.fillCircle(x, y, size + 1, fillColor);
+    tft.drawCircle(x, y, size + 1, outlineColor);
 
-    // Draw piece symbol using text
-    // Adjust text size and position based on piece size
-    int textSize = (size > 10) ? 2 : 1;
-    tft.setTextSize(textSize);
-    tft.setTextColor(textColor);
-
-    // Map piece characters to single-character symbols
-    const char *symbolMap = "KQRBNP";  // King, Queen, Rook, Bishop, Knight, Pawn
-    int idx = -1;
+    // Draw the specific piece
     switch (kind) {
-      case 'k': idx = 0; break;  // King
-      case 'q': idx = 1; break;  // Queen
-      case 'r': idx = 2; break;  // Rook
-      case 'b': idx = 3; break;  // Bishop
-      case 'n': idx = 4; break;  // Knight
-      case 'p': idx = 5; break;  // Pawn
-    }
-
-    if (idx >= 0) {
-      // Center the text on the circle
-      int offsetX = (textSize == 2) ? 6 : 3;
-      int offsetY = (textSize == 2) ? 8 : 4;
-      tft.setCursor(x - offsetX, y - offsetY);
-      tft.write((uint8_t)symbolMap[idx]);
+      case 'k':
+        drawKing(tft, x, y, size - 2, fillColor, outlineColor);
+        break;
+      case 'q':
+        drawQueen(tft, x, y, size - 2, fillColor, outlineColor);
+        break;
+      case 'r':
+        drawRook(tft, x, y, size - 2, fillColor, outlineColor);
+        break;
+      case 'b':
+        drawBishop(tft, x, y, size - 2, fillColor, outlineColor);
+        break;
+      case 'n':
+        drawKnight(tft, x, y, size - 2, fillColor, outlineColor);
+        break;
+      case 'p':
+        drawPawn(tft, x, y, size - 2, fillColor, outlineColor);
+        break;
     }
   }
 
