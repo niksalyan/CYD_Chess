@@ -3,6 +3,7 @@
 
 #include <Adafruit_ILI9341.h>
 #include "ChessEngine.h"
+#include "ChessGraphics.h"
 
 class ChessBoard {
 public:

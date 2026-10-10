@@ -9,11 +9,6 @@ namespace {
   const uint16_t HIGHLIGHT = 0xFFE0;
   const uint16_t MOVE_HINT = 0x07E0;
   const uint16_t PANEL_BG = 0x18E3;
-
-  char pieceLetter(char piece) {
-    if (piece >= 'a' && piece <= 'z') return piece - ('a' - 'A');
-    return piece;
-  }
 }
 
 void ChessBoard::begin(Adafruit_ILI9341 &display) {
@@ -46,6 +41,7 @@ void ChessBoard::draw(const ChessPosition &position, int selectedSquare,
 void ChessBoard::drawBoard(const ChessPosition &position, int selectedSquare,
                            const ChessMove *legalMoves, uint8_t legalMoveCount,
                            const ChessMove &lastMove) {
+  // Draw square backgrounds
   for (int rank = 0; rank < 8; ++rank) {
     for (int file = 0; file < 8; ++file) {
       int square = rank * 8 + file;
@@ -59,6 +55,7 @@ void ChessBoard::drawBoard(const ChessPosition &position, int selectedSquare,
     }
   }
 
+  // Draw move hints
   for (uint8_t i = 0; i < legalMoveCount; ++i) {
     if (selectedSquare < 0 || legalMoves[i].from != selectedSquare) continue;
     int x = (legalMoves[i].to & 7) * SQUARE_SIZE + SQUARE_SIZE / 2;
@@ -69,21 +66,8 @@ void ChessBoard::drawBoard(const ChessPosition &position, int selectedSquare,
       tft->fillCircle(x, y, 4, MOVE_HINT);
   }
 
-  for (int square = 0; square < 64; ++square) {
-    char piece = position.board[square];
-    if (!piece) continue;
-    int x = (square & 7) * SQUARE_SIZE;
-    int y = (7 - (square >> 3)) * SQUARE_SIZE;
-    bool white = piece >= 'A' && piece <= 'Z';
-    uint16_t fill = white ? ILI9341_WHITE : 0x1082;
-    uint16_t ink = white ? 0x0841 : ILI9341_WHITE;
-    tft->fillCircle(x + 15, y + 15, 12, fill);
-    tft->drawCircle(x + 15, y + 15, 12, white ? 0x7BEF : ILI9341_BLACK);
-    tft->setTextSize(2);
-    tft->setTextColor(ink);
-    tft->setCursor(x + 9, y + 7);
-    tft->write((uint8_t)pieceLetter(piece));
-  }
+  // Draw all pieces using graphics module
+  ChessGraphics::drawAllPieces(*tft, position, SQUARE_SIZE);
 }
 
 void ChessBoard::drawPanel(const ChessPosition &position, uint8_t aiDepth,

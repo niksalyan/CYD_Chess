@@ -5,9 +5,13 @@
 #include "ChessEngine.h"
 
 namespace ChessGraphics {
-  // Draw a single chess piece at the given position
-  void drawPiece(Adafruit_ILI9341 &tft, char piece, int x, int y, int size = 12);
-  
+  // Draw a single chess piece as a vector-like symbol
+  // piece: character representing the piece (K, Q, R, B, N, P, k, q, r, b, n, p)
+  // x, y: pixel coordinates (center of the piece)
+  // size: radius in pixels
+  // tft: display object to draw on
+  void drawPiece(Adafruit_ILI9341 &tft, char piece, int x, int y, int size);
+
   // Draw all pieces on the board
   void drawAllPieces(Adafruit_ILI9341 &tft, const ChessPosition &position, int squareSize);
 }

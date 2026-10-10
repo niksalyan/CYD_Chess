@@ -4,6 +4,7 @@
 #include <XPT2046_Touchscreen.h>
 
 #include "ChessEngine.h"
+#include "AIEngine.h"
 #include "ChessBoard.h"
 
 #define XPT2046_IRQ  36
@@ -103,7 +104,7 @@ static void startNewGame() {
 
 static void makeAIMove() {
   ChessMove move;
-  if (ChessEngine::findBestMove(position, aiDepth, move)) {
+  if (AIEngine::findBestMove(position, aiDepth, move)) {
     ChessEngine::makeMove(position, move);
     lastMove = move;
     refreshLegalMoves();
