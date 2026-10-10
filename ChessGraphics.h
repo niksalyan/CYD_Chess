@@ -3,9 +3,10 @@
 
 #include <Adafruit_ILI9341.h>
 #include "ChessEngine.h"
+#include "ChessPieceAtlas.h"
 
 namespace ChessGraphics {
-  // Draw a single chess piece as a vector-like symbol
+  // Draw a single chess piece using sprite atlas or vector fallback
   // piece: character representing the piece (K, Q, R, B, N, P, k, q, r, b, n, p)
   // x, y: pixel coordinates (center of the piece)
   // size: radius in pixels
