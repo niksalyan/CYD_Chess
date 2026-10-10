@@ -7,7 +7,7 @@ Usage:
 Expected input:
 - root/Chess_Pieces_Sprite.png
 - 180x60 PNG with 6 columns x 2 rows
-a
+
 Each tile is assumed to be 30x30 pixels, ordered as:
     Row 0: K, Q, B, R, N, P
     Row 1: k, q, b, r, n, p
@@ -73,8 +73,8 @@ def convert_image_to_atlas() -> list[list[int]]:
     return atlas
 
 
-def format_array(name: str, values: list[int], per_line: int = 12) -> str:
-    lines = [f"const uint16_t {name}[{len(values)}] = {{"]
+def format_sprite_array(name: str, values: list[int], per_line: int = 12) -> str:
+    lines = [f"const uint16_t {name}[{len(values)}] PROGMEM = {{"]
     for i in range(0, len(values), per_line):
         chunk = values[i:i + per_line]
         rendered = ", ".join(f"0x{v:04X}" for v in chunk)
@@ -102,14 +102,18 @@ def write_header(atlas: list[list[int]]) -> None:
         "",
     ]
 
+    # Generate individual sprite arrays
+    sprite_names = []
     for idx, tile in enumerate(atlas):
         name = f"chessPieceAtlas_{idx}"
-        output.append(format_array(name, tile, per_line=12))
+        sprite_names.append(name)
+        output.append(format_sprite_array(name, tile, per_line=12))
         output.append("")
 
-    output.append("const uint16_t chessPieceAtlas[CHESS_PIECE_ATLAS_COUNT][CHESS_PIECE_ATLAS_TILE_SIZE * CHESS_PIECE_ATLAS_TILE_SIZE] = {")
-    for idx, _ in enumerate(atlas):
-        output.append(f"  chessPieceAtlas_{idx},")
+    # Generate the main atlas array that references all sprites
+    output.append("const uint16_t* const chessPieceAtlas[CHESS_PIECE_ATLAS_COUNT] PROGMEM = {")
+    for name in sprite_names:
+        output.append(f"  {name},")
     output.append("};")
     output.append("")
     output.append("#endif")
