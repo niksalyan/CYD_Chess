@@ -18,14 +18,14 @@ namespace ChessGraphics {
     char kind = lowerPiece(piece);
 
     // Draw base circle for the piece
-    tft->fillCircle(x, y, size, fillColor);
-    tft->drawCircle(x, y, size, outlineColor);
+    tft.fillCircle(x, y, size, fillColor);
+    tft.drawCircle(x, y, size, outlineColor);
 
     // Draw piece symbol using text
     // Adjust text size and position based on piece size
     int textSize = (size > 10) ? 2 : 1;
-    tft->setTextSize(textSize);
-    tft->setTextColor(textColor);
+    tft.setTextSize(textSize);
+    tft.setTextColor(textColor);
 
     // Map piece characters to single-character symbols
     const char *symbolMap = "KQRBNP";  // King, Queen, Rook, Bishop, Knight, Pawn
@@ -43,8 +43,8 @@ namespace ChessGraphics {
       // Center the text on the circle
       int offsetX = (textSize == 2) ? 6 : 3;
       int offsetY = (textSize == 2) ? 8 : 4;
-      tft->setCursor(x - offsetX, y - offsetY);
-      tft->write((uint8_t)symbolMap[idx]);
+      tft.setCursor(x - offsetX, y - offsetY);
+      tft.write((uint8_t)symbolMap[idx]);
     }
   }
 
