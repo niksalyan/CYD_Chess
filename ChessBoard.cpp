@@ -38,37 +38,64 @@ void ChessBoard::draw(const ChessPosition &position, int selectedSquare,
   drawPanel(position, aiDepth, gameOver, thinking);
 }
 
+
 void ChessBoard::drawBoard(const ChessPosition &position, int selectedSquare,
                            const ChessMove *legalMoves, uint8_t legalMoveCount,
                            const ChessMove &lastMove) {
-  // Draw square backgrounds
+  int centerOffset = SQUARE_SIZE / 2;
+  int pieceSize = (SQUARE_SIZE * 2) / 5;
+
   for (int rank = 0; rank < 8; ++rank) {
     for (int file = 0; file < 8; ++file) {
       int square = rank * 8 + file;
       int x = file * SQUARE_SIZE;
       int y = (7 - rank) * SQUARE_SIZE;
+
+      // 1. Draw square background
       bool isLight = ((file + rank) & 1) != 0;
       uint16_t color = isLight ? LIGHT_SQUARE : DARK_SQUARE;
-      if (square == lastMove.from || square == lastMove.to) color = 0xB5F3;
-      if (square == selectedSquare) color = HIGHLIGHT;
+
+      if (square == lastMove.from || square == lastMove.to)
+        color = 0xB5F3;
+
+      if (square == selectedSquare)
+        color = HIGHLIGHT;
+
       tft->fillRect(x, y, SQUARE_SIZE, SQUARE_SIZE, color);
+
+      // 2. Draw move hint for this square
+      if (selectedSquare >= 0) {
+        for (uint8_t i = 0; i < legalMoveCount; ++i) {
+          if (legalMoves[i].from != selectedSquare ||
+              legalMoves[i].to != square)
+            continue;
+
+          int cx = x + centerOffset;
+          int cy = y + centerOffset;
+
+          if (position.board[square])
+            tft->drawCircle(cx, cy, 13, MOVE_HINT);
+          else
+            tft->fillCircle(cx, cy, 4, MOVE_HINT);
+
+          break;
+        }
+      }
+
+      // 3. Draw the piece immediately after its square
+      char piece = position.board[square];
+
+      if (piece) {
+        int cx = x + centerOffset;
+        int cy = y + centerOffset;
+
+        ChessGraphics::drawPiece(
+            *tft, piece, cx, cy, pieceSize);
+      }
     }
   }
-
-  // Draw move hints
-  for (uint8_t i = 0; i < legalMoveCount; ++i) {
-    if (selectedSquare < 0 || legalMoves[i].from != selectedSquare) continue;
-    int x = (legalMoves[i].to & 7) * SQUARE_SIZE + SQUARE_SIZE / 2;
-    int y = (7 - (legalMoves[i].to >> 3)) * SQUARE_SIZE + SQUARE_SIZE / 2;
-    if (position.board[legalMoves[i].to])
-      tft->drawCircle(x, y, 13, MOVE_HINT);
-    else
-      tft->fillCircle(x, y, 4, MOVE_HINT);
-  }
-
-  // Draw all pieces using graphics module
-  ChessGraphics::drawAllPieces(*tft, position, SQUARE_SIZE);
 }
+
 
 void ChessBoard::drawPanel(const ChessPosition &position, uint8_t aiDepth,
                            bool gameOver, bool thinking) {
