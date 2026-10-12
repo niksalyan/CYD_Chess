@@ -1,5 +1,6 @@
 #include "ChessEngine.h"
 
+
 namespace {
   const uint8_t WHITE_KING_SIDE = 1;
   const uint8_t WHITE_QUEEN_SIDE = 2;

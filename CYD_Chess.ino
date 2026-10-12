@@ -1,21 +1,23 @@
 #include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_ILI9341.h>
+
 #include <XPT2046_Touchscreen.h>
 
 #include "ChessEngine.h"
 #include "AIEngine.h"
 #include "ChessBoard.h"
 
-#define XPT2046_IRQ  36
+
+#define XPT2046_IRQ 36
 #define XPT2046_MOSI 32
 #define XPT2046_MISO 39
-#define XPT2046_CLK  25
-#define XPT2046_CS   33
+#define XPT2046_CLK 25
+#define XPT2046_CS 33
 
-#define TFT_CS   15
-#define TFT_DC    2
-#define TFT_RST  -1
+#define TFT_CS 15
+#define TFT_DC 2
+#define TFT_RST -1
 
 // Adjust these values if your touch panel's raw readings differ.
 static const int TOUCH_X_MIN = 200;
@@ -25,6 +27,8 @@ static const int TOUCH_Y_MAX = 3900;
 static const bool TOUCH_SWAP_XY = false;
 static const bool TOUCH_INVERT_X = false;
 static const bool TOUCH_INVERT_Y = false;
+
+bool showNewGameDialog = false;
 
 SPIClass touchSPI = SPIClass(VSPI);
 SPIClass tftSPI = SPIClass(HSPI);
@@ -36,12 +40,14 @@ ChessBoard chessBoard;
 int selectedSquare = -1;
 ChessMove legalMoves[ChessEngine::MAX_MOVES];
 uint8_t legalMoveCount = 0;
-ChessMove lastMove = {255, 255, 0, 0};
+ChessMove lastMove = { 255, 255, 0, 0 };
 uint8_t aiDepth = 3;
 bool gameOver = false;
 bool waitingForAI = false;
 bool previousTouch = false;
 uint32_t lastTouchMillis = 0;
+
+
 
 static int mapTouchAxis(int value, int low, int high, int extent, bool invert) {
   if (high <= low) return 0;
@@ -116,13 +122,14 @@ void setup() {
   Serial.begin(115200);
   touchSPI.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
   touch.begin(touchSPI);
-  touch.setRotation(1);
+  touch.setRotation(0);
 
   tftSPI.begin();
   tft.begin();
   pinMode(21, OUTPUT);
   digitalWrite(21, HIGH);
-  tft.setRotation(1);
+  tft.setRotation(0);
+
 
   chessBoard.begin(tft);
   startNewGame();
@@ -138,8 +145,19 @@ void loop() {
 
   if (isTouched && !previousTouch && now - lastTouchMillis > 180) {
     lastTouchMillis = now;
-    if (chessBoard.isNewGameButton(x, y)) {
-      startNewGame();
+
+    if (showNewGameDialog) {
+      // While the dialog is open, ignore all other controls.
+      if (chessBoard.isConfirmNewGameButton(x, y)) {
+        showNewGameDialog = false;
+        startNewGame();
+        redraw = true;
+      } else if (chessBoard.isCancelNewGameButton(x, y)) {
+        showNewGameDialog = false;
+        redraw = true;
+      }
+    } else if (chessBoard.isNewGameButton(x, y)) {
+      showNewGameDialog = true;
       redraw = true;
     } else if (chessBoard.isDepthButton(x, y)) {
       aiDepth = aiDepth >= 4 ? 2 : aiDepth + 1;
@@ -160,8 +178,12 @@ void loop() {
   }
 
   if (redraw) {
-    chessBoard.draw(position, selectedSquare, legalMoves, legalMoveCount, lastMove,
-                    aiDepth, gameOver, false);
+    chessBoard.draw(position, selectedSquare, legalMoves, legalMoveCount,
+                    lastMove, aiDepth, gameOver, false);
+
+    if (showNewGameDialog) {
+      chessBoard.drawNewGameConfirmation();
+    }
   }
   delay(15);
 }
