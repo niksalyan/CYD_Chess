@@ -29,7 +29,7 @@ public:
             const ChessMove *legalMoves, uint8_t legalMoveCount,
             const ChessMove &lastMove, uint8_t aiDepth,
             bool gameOver, bool thinking, bool humanPlaysWhite);
-  int squareAt(int x, int y) const;
+  int squareAt(int x, int y, bool humanPlaysWhite) const;
   bool isNewGameButton(int x, int y) const;
   bool isDepthButton(int x, int y) const;
 
@@ -48,7 +48,7 @@ private:
   Adafruit_ILI9341 *tft;
   void drawBoard(const ChessPosition &position, int selectedSquare,
                  const ChessMove *legalMoves, uint8_t legalMoveCount,
-                 const ChessMove &lastMove);
+                 const ChessMove &lastMove, bool humanPlaysWhite);
 
   void updateMatrix(const ChessPosition &position, int selectedSquare,
                   const ChessMove *legalMoves, uint8_t legalMoveCount,

@@ -87,7 +87,7 @@ static bool makeHumanMove(int from, int to) {
 }
 
 static void handleBoardTouch(int x, int y) {
-  int square = chessBoard.squareAt(x, y);
+  int square = chessBoard.squareAt(x, y, humanPlaysWhite);
   if (square < 0 || gameOver || waitingForAI ||
       position.whiteToMove != humanPlaysWhite) return;
 

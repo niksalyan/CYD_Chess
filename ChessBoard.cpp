@@ -26,10 +26,11 @@ void ChessBoard::begin(Adafruit_ILI9341 &display) {
   pixels.show();
 }
 
-int ChessBoard::squareAt(int x, int y) const {
+int ChessBoard::squareAt(int x, int y, bool humanPlaysWhite) const {
   if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE) return -1;
   int file = x / SQUARE_SIZE;
-  int rank = 7 - y / SQUARE_SIZE;
+  int rank = humanPlaysWhite ? 7 - y / SQUARE_SIZE : y / SQUARE_SIZE;
+  if (!humanPlaysWhite) file = 7 - file;
   return rank * 8 + file;
 }
 
@@ -61,7 +62,8 @@ void ChessBoard::draw(const ChessPosition &position, int selectedSquare,
                       const ChessMove *legalMoves, uint8_t legalMoveCount,
                       const ChessMove &lastMove, uint8_t aiDepth,
                       bool gameOver, bool thinking, bool humanPlaysWhite) {
-  drawBoard(position, selectedSquare, legalMoves, legalMoveCount, lastMove);
+  drawBoard(position, selectedSquare, legalMoves, legalMoveCount, lastMove,
+            humanPlaysWhite);
   drawPanel(position, aiDepth, gameOver, thinking, humanPlaysWhite);
   updateMatrix(position, selectedSquare, legalMoves, legalMoveCount, lastMove,
                humanPlaysWhite);
@@ -71,7 +73,7 @@ void ChessBoard::draw(const ChessPosition &position, int selectedSquare,
 // 2. Cleaned up drawBoard (Removed all 'pixels' logic entirely from here)
 void ChessBoard::drawBoard(const ChessPosition &position, int selectedSquare,
                            const ChessMove *legalMoves, uint8_t legalMoveCount,
-                           const ChessMove &lastMove) {
+                           const ChessMove &lastMove, bool humanPlaysWhite) {
 
   int centerOffset = SQUARE_SIZE / 2;
   int pieceSize = (SQUARE_SIZE * 2) / 5;
@@ -79,8 +81,10 @@ void ChessBoard::drawBoard(const ChessPosition &position, int selectedSquare,
   for (int rank = 0; rank < 8; ++rank) {
     for (int file = 0; file < 8; ++file) {
       int square = rank * 8 + file;
-      int x = file * SQUARE_SIZE;
-      int y = (7 - rank) * SQUARE_SIZE;
+      int displayFile = humanPlaysWhite ? file : 7 - file;
+      int displayRank = humanPlaysWhite ? 7 - rank : rank;
+      int x = displayFile * SQUARE_SIZE;
+      int y = displayRank * SQUARE_SIZE;
 
       // Determine TFT Colors
       bool isLight = ((file + rank) & 1) != 0;
@@ -167,7 +171,8 @@ void ChessBoard::updateMatrix(const ChessPosition &position, int selectedSquare,
       }
 
       // Write to matrix coordinate buffer
-      drawMatrix(file, 7 - rank, matrixColor);
+      drawMatrix(humanPlaysWhite ? file : 7 - file,
+                 humanPlaysWhite ? 7 - rank : rank, matrixColor);
     }
   }
 
