@@ -14,6 +14,7 @@ and mirrors the board on a 16x16 addressable LED matrix.
 - Recalibrate touchscreen coordinates and save calibration across reboots.
 - Enter calibration at startup by holding the touchscreen if normal touch
   input is too inaccurate to use the menu.
+- View a branded startup splash screen; tap to skip it.
 - Navigate between screens through the shared UI and navigation system.
 
 ## Hardware
@@ -60,6 +61,9 @@ device. Open `CYD_Chess.ino`, compile, and upload. The project's `.cpp` and
 them.
 
 ## Controls
+
+The splash screen appears briefly at startup. Tap anywhere to continue
+immediately to the game.
 
 ### Game screen
 
@@ -117,6 +121,7 @@ or inverted, adjust `TOUCH_SWAP_XY`, `TOUCH_INVERT_X`, or `TOUCH_INVERT_Y` in
 | `MenuScreen.h`, `MenuScreen.cpp` | Main menu |
 | `MoveHistoryScreen.h`, `MoveHistoryScreen.cpp` | Move-history screen |
 | `TouchCalibrationScreen.h`, `TouchCalibrationScreen.cpp` | Touch calibration and persistent calibration data |
+| `SplashScreen.h`, `SplashScreen.cpp` | Startup splash screen |
 | `tools/generate_chess_sprites.py` | Regenerates the piece atlas from the sprite sheet |
 | `mat/` | 3D models and printable enclosure/board parts |
 

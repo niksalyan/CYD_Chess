@@ -6,6 +6,7 @@
 #include "GameScreen.h"
 #include "MenuScreen.h"
 #include "Navigation.h"
+#include "SplashScreen.h"
 #include "TouchCalibrationScreen.h"
 #include "UI.h"
 
@@ -97,7 +98,11 @@ void setup() {
   MenuScreen::instance().begin(tft, gameScreen);
   TouchCalibrationScreen::instance().begin(tft);
   Navigation::setRoot(gameScreen);
-  enterCalibrationIfHeldAtStartup();
+  bool calibrationRequested = enterCalibrationIfHeldAtStartup();
+  if (!calibrationRequested) {
+    SplashScreen::instance().begin(tft, gameScreen);
+    Navigation::setRoot(SplashScreen::instance());
+  }
   UI::draw();
 }
 

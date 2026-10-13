@@ -47,15 +47,15 @@ bool ChessBoard::isDepthButton(int x, int y) const {
 }
 
 bool ChessBoard::isPlayerFirstButton(int x, int y) const {
-  return x >= 32 && x < 116 && y >= 148 && y < 180;
+  return x >= 28 && x < 116 && y >= 124 && y < 196;
 }
 
 bool ChessBoard::isAIFirstButton(int x, int y) const {
-  return x >= 124 && x < 208 && y >= 148 && y < 180;
+  return x >= 124 && x < 212 && y >= 124 && y < 196;
 }
 
 bool ChessBoard::isCancelNewGameButton(int x, int y) const {
-  return x >= 78 && x < 162 && y >= 188 && y < 212;
+  return x >= 78 && x < 162 && y >= 210 && y < 240;
 }
 
 void ChessBoard::draw(const ChessPosition &position, int selectedSquare,
@@ -287,40 +287,47 @@ void ChessBoard::drawPanel(const ChessPosition &position, uint8_t aiDepth,
 
 void ChessBoard::drawFirstMoveSelection() {
   const int x = 20;
-  const int y = 100;
+  const int y = 70;
   const int w = 200;
-  const int h = 120;
+  const int h = 180;
 
-  // Dim the board behind the dialog.
-  tft->fillRect(x, y, w, h, ILI9341_BLACK);
-  tft->drawRoundRect(x, y, w, h, 8, ILI9341_CYAN);
+  tft->fillRoundRect(x, y, w, h, 10, 0x0861);
+  tft->drawRoundRect(x, y, w, h, 10, ILI9341_CYAN);
+  tft->fillRoundRect(x + 2, y + 2, w - 4, 36, 8, 0x10A2);
 
   tft->setTextWrap(false);
   tft->setTextSize(1);
   tft->setTextColor(ILI9341_WHITE);
-  tft->setCursor(x + 34, y + 17);
-  tft->print("Who goes first?");
+  tft->setCursor(x + 76, y + 15);
+  tft->print("NEW GAME");
 
-  tft->fillRoundRect(
-    x + 12, y + 48, 84, 32, 5, 0x4208
-  );
-  tft->drawRoundRect(
-    x + 12, y + 48, 84, 32, 5, ILI9341_CYAN
-  );
-  tft->setCursor(x + 31, y + 60);
+  tft->setTextColor(0xBDF7);
+  tft->setCursor(x + 52, y + 44);
+  tft->print("Who moves first?");
+
+  const int cardY = y + 54;
+  tft->fillRoundRect(x + 8, cardY, 88, 72, 6, 0x2124);
+  tft->drawRoundRect(x + 8, cardY, 88, 72, 6, ILI9341_CYAN);
+  ChessGraphics::drawPiece(*tft, 'K', x + 52, cardY + 19, 24);
+  tft->setTextColor(ILI9341_WHITE);
+  tft->setCursor(x + 34, cardY + 43);
   tft->print("PLAYER");
+  tft->setTextColor(ILI9341_CYAN);
+  tft->setCursor(x + 37, cardY + 56);
+  tft->print("WHITE");
 
-  tft->fillRoundRect(
-    x + 104, y + 48, 84, 32, 5, 0x7800
-  );
-  tft->drawRoundRect(
-    x + 104, y + 48, 84, 32, 5, ILI9341_YELLOW
-  );
-  tft->setCursor(x + 130, y + 60);
+  tft->fillRoundRect(x + 104, cardY, 88, 72, 6, 0x2124);
+  tft->drawRoundRect(x + 104, cardY, 88, 72, 6, ILI9341_YELLOW);
+  ChessGraphics::drawPiece(*tft, 'k', x + 148, cardY + 19, 24);
+  tft->setTextColor(ILI9341_WHITE);
+  tft->setCursor(x + 138, cardY + 43);
   tft->print("AI");
+  tft->setTextColor(ILI9341_YELLOW);
+  tft->setCursor(x + 133, cardY + 56);
+  tft->print("BLACK");
 
-  tft->fillRoundRect(x + 58, y + 88, 84, 24, 5, 0x4208);
-  tft->drawRoundRect(x + 58, y + 88, 84, 24, 5, ILI9341_WHITE);
-  tft->setCursor(x + 88, y + 96);
+  tft->drawRoundRect(x + 58, y + 140, 84, 30, 5, 0x7BEF);
+  tft->setTextColor(0xBDF7);
+  tft->setCursor(x + 82, y + 151);
   tft->print("CANCEL");
 }
