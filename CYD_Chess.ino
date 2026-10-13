@@ -1,13 +1,11 @@
 #include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_ILI9341.h>
-
 #include <XPT2046_Touchscreen.h>
 
-#include "ChessEngine.h"
-#include "AIEngine.h"
-#include "ChessBoard.h"
-
+#include "GameScreen.h"
+#include "Navigation.h"
+#include "UI.h"
 
 #define XPT2046_IRQ 36
 #define XPT2046_MOSI 32
@@ -19,7 +17,6 @@
 #define TFT_DC 2
 #define TFT_RST -1
 
-// Adjust these values if your touch panel's raw readings differ.
 static const int TOUCH_X_MIN = 200;
 static const int TOUCH_X_MAX = 3900;
 static const int TOUCH_Y_MIN = 200;
@@ -28,27 +25,14 @@ static const bool TOUCH_SWAP_XY = false;
 static const bool TOUCH_INVERT_X = false;
 static const bool TOUCH_INVERT_Y = false;
 
-bool showNewGameDialog = false;
-
 SPIClass touchSPI = SPIClass(VSPI);
 SPIClass tftSPI = SPIClass(HSPI);
 Adafruit_ILI9341 tft(&tftSPI, TFT_DC, TFT_CS, TFT_RST);
 XPT2046_Touchscreen touch(XPT2046_CS, XPT2046_IRQ);
+GameScreen gameScreen;
 
-ChessPosition position;
-ChessBoard chessBoard;
-int selectedSquare = -1;
-ChessMove legalMoves[ChessEngine::MAX_MOVES];
-uint8_t legalMoveCount = 0;
-ChessMove lastMove = { 255, 255, 0, 0 };
-uint8_t aiDepth = 3;
-bool gameOver = false;
-bool waitingForAI = false;
-bool humanPlaysWhite = true;
-bool previousTouch = false;
-uint32_t lastTouchMillis = 0;
-
-
+static bool previousTouch = false;
+static uint32_t lastTouchMillis = 0;
 
 static int mapTouchAxis(int value, int low, int high, int extent, bool invert) {
   if (high <= low) return 0;
@@ -67,64 +51,6 @@ static bool readTouchPoint(int &x, int &y) {
   return true;
 }
 
-static void refreshLegalMoves() {
-  legalMoveCount = ChessEngine::getLegalMoves(position, legalMoves, ChessEngine::MAX_MOVES);
-}
-
-static bool makeHumanMove(int from, int to) {
-  for (uint8_t i = 0; i < legalMoveCount; ++i) {
-    if (legalMoves[i].from == from && legalMoves[i].to == to) {
-      ChessEngine::makeMove(position, legalMoves[i]);
-      lastMove = legalMoves[i];
-      selectedSquare = -1;
-      refreshLegalMoves();
-      gameOver = legalMoveCount == 0 || position.halfmoveClock >= 100;
-      waitingForAI = !gameOver;
-      return true;
-    }
-  }
-  return false;
-}
-
-static void handleBoardTouch(int x, int y) {
-  int square = chessBoard.squareAt(x, y, humanPlaysWhite);
-  if (square < 0 || gameOver || waitingForAI ||
-      position.whiteToMove != humanPlaysWhite) return;
-
-  if (selectedSquare < 0) {
-    if (position.board[square] &&
-        ChessEngine::isWhitePiece(position.board[square]) == humanPlaysWhite)
-      selectedSquare = square;
-  } else if (square == selectedSquare) {
-    selectedSquare = -1;
-  } else if (!makeHumanMove(selectedSquare, square)) {
-    if (position.board[square] &&
-        ChessEngine::isWhitePiece(position.board[square]) == humanPlaysWhite)
-      selectedSquare = square;
-  }
-}
-
-static void startNewGame(bool playerFirst) {
-  ChessEngine::reset(position);
-  humanPlaysWhite = playerFirst;
-  selectedSquare = -1;
-  lastMove.from = 255;
-  lastMove.to = 255;
-  gameOver = false;
-  waitingForAI = !playerFirst;
-  refreshLegalMoves();
-}
-
-static void makeAIMove() {
-  ChessMove move;
-  if (AIEngine::findBestMove(position, aiDepth, move)) {
-    ChessEngine::makeMove(position, move);
-    lastMove = move;
-    refreshLegalMoves();
-  }
-  waitingForAI = false;
-}
-
 void setup() {
   Serial.begin(115200);
   touchSPI.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
@@ -137,63 +63,22 @@ void setup() {
   digitalWrite(21, HIGH);
   tft.setRotation(0);
 
-
-  chessBoard.begin(tft);
-  startNewGame(true);
-  chessBoard.draw(position, selectedSquare, legalMoves, legalMoveCount, lastMove,
-                  aiDepth, gameOver, false, humanPlaysWhite);
+  gameScreen.begin(tft);
+  Navigation::setRoot(gameScreen);
+  UI::draw();
 }
 
 void loop() {
   int x, y;
   bool isTouched = readTouchPoint(x, y);
   uint32_t now = millis();
-  bool redraw = false;
 
   if (isTouched && !previousTouch && now - lastTouchMillis > 180) {
     lastTouchMillis = now;
-
-    if (showNewGameDialog) {
-      if (chessBoard.isPlayerFirstButton(x, y)) {
-        showNewGameDialog = false;
-        startNewGame(true);
-        redraw = true;
-      } else if (chessBoard.isAIFirstButton(x, y)) {
-        showNewGameDialog = false;
-        startNewGame(false);
-        redraw = true;
-      } else if (chessBoard.isCancelNewGameButton(x, y)) {
-        showNewGameDialog = false;
-        redraw = true;
-      }
-    } else if (chessBoard.isNewGameButton(x, y)) {
-      showNewGameDialog = true;
-      redraw = true;
-    } else if (chessBoard.isDepthButton(x, y)) {
-      aiDepth = aiDepth >= 4 ? 2 : aiDepth + 1;
-      redraw = true;
-    } else {
-      handleBoardTouch(x, y);
-      redraw = true;
-    }
+    if (UI::handleTouch(x, y)) UI::draw();
   }
   previousTouch = isTouched;
 
-  if (waitingForAI) {
-    chessBoard.draw(position, selectedSquare, legalMoves, legalMoveCount, lastMove,
-                    aiDepth, false, true, humanPlaysWhite);
-    makeAIMove();
-    gameOver = legalMoveCount == 0 || position.halfmoveClock >= 100;
-    redraw = true;
-  }
-
-  if (redraw) {
-    chessBoard.draw(position, selectedSquare, legalMoves, legalMoveCount,
-                    lastMove, aiDepth, gameOver, false, humanPlaysWhite);
-
-    if (showNewGameDialog) {
-      chessBoard.drawFirstMoveSelection();
-    }
-  }
+  if (UI::update()) UI::draw();
   delay(15);
 }

@@ -1,0 +1,127 @@
+#include "GameScreen.h"
+
+GameScreen::GameScreen()
+  : selectedSquare(-1),
+    legalMoveCount(0),
+    lastMove{255, 255, 0, 0},
+    aiDepth(3),
+    gameOver(false),
+    waitingForAI(false),
+    humanPlaysWhite(true),
+    showFirstMoveSelection(false) {
+}
+
+void GameScreen::begin(Adafruit_ILI9341 &display) {
+  chessBoard.begin(display);
+  startNewGame(true);
+}
+
+void GameScreen::refreshLegalMoves() {
+  legalMoveCount = ChessEngine::getLegalMoves(
+    position, legalMoves, ChessEngine::MAX_MOVES);
+}
+
+bool GameScreen::makeHumanMove(int from, int to) {
+  for (uint8_t i = 0; i < legalMoveCount; ++i) {
+    if (legalMoves[i].from == from && legalMoves[i].to == to) {
+      ChessEngine::makeMove(position, legalMoves[i]);
+      lastMove = legalMoves[i];
+      selectedSquare = -1;
+      refreshLegalMoves();
+      gameOver = legalMoveCount == 0 || position.halfmoveClock >= 100;
+      waitingForAI = !gameOver;
+      return true;
+    }
+  }
+  return false;
+}
+
+void GameScreen::handleBoardTouch(int x, int y) {
+  int square = chessBoard.squareAt(x, y, humanPlaysWhite);
+  if (square < 0 || gameOver || waitingForAI ||
+      position.whiteToMove != humanPlaysWhite) return;
+
+  if (selectedSquare < 0) {
+    if (position.board[square] &&
+        ChessEngine::isWhitePiece(position.board[square]) == humanPlaysWhite)
+      selectedSquare = square;
+  } else if (square == selectedSquare) {
+    selectedSquare = -1;
+  } else if (!makeHumanMove(selectedSquare, square)) {
+    if (position.board[square] &&
+        ChessEngine::isWhitePiece(position.board[square]) == humanPlaysWhite)
+      selectedSquare = square;
+  }
+}
+
+void GameScreen::startNewGame(bool playerFirst) {
+  ChessEngine::reset(position);
+  humanPlaysWhite = playerFirst;
+  selectedSquare = -1;
+  lastMove.from = 255;
+  lastMove.to = 255;
+  gameOver = false;
+  waitingForAI = !playerFirst;
+  refreshLegalMoves();
+}
+
+void GameScreen::makeAIMove() {
+  ChessMove move;
+  if (AIEngine::findBestMove(position, aiDepth, move)) {
+    ChessEngine::makeMove(position, move);
+    lastMove = move;
+    refreshLegalMoves();
+  }
+  waitingForAI = false;
+}
+
+void GameScreen::draw() {
+  draw(false);
+}
+
+void GameScreen::draw(bool thinking) {
+  chessBoard.draw(position, selectedSquare, legalMoves, legalMoveCount,
+                  lastMove, aiDepth, gameOver, thinking, humanPlaysWhite);
+  if (showFirstMoveSelection) chessBoard.drawFirstMoveSelection();
+}
+
+bool GameScreen::handleTouch(int x, int y) {
+  if (showFirstMoveSelection) {
+    if (chessBoard.isPlayerFirstButton(x, y)) {
+      showFirstMoveSelection = false;
+      startNewGame(true);
+      return true;
+    }
+    if (chessBoard.isAIFirstButton(x, y)) {
+      showFirstMoveSelection = false;
+      startNewGame(false);
+      return true;
+    }
+    if (chessBoard.isCancelNewGameButton(x, y)) {
+      showFirstMoveSelection = false;
+      return true;
+    }
+    return false;
+  }
+
+  if (chessBoard.isNewGameButton(x, y)) {
+    showFirstMoveSelection = true;
+    return true;
+  }
+  if (chessBoard.isDepthButton(x, y)) {
+    aiDepth = aiDepth >= 4 ? 2 : aiDepth + 1;
+    return true;
+  }
+
+  handleBoardTouch(x, y);
+  return true;
+}
+
+bool GameScreen::update() {
+  if (!waitingForAI) return false;
+
+  draw(true);
+  makeAIMove();
+  gameOver = legalMoveCount == 0 || position.halfmoveClock >= 100;
+  return true;
+}
