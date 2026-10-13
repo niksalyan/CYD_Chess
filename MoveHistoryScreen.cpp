@@ -34,7 +34,7 @@ namespace {
 }
 
 MoveHistoryScreen::MoveHistoryScreen()
-  : display(0), game(0), firstMoveNumber(0) {
+  : display(0), game(0), firstMoveNumber(0), confirmUndo(false) {
 }
 
 MoveHistoryScreen &MoveHistoryScreen::instance() {
@@ -48,6 +48,7 @@ void MoveHistoryScreen::begin(Adafruit_ILI9341 &tft, GameScreen &gameScreen) {
 }
 
 void MoveHistoryScreen::showLatest() {
+  confirmUndo = false;
   uint16_t totalMoveNumbers = (game->moveHistoryCount() + 1) / 2;
   firstMoveNumber = totalMoveNumbers > ROWS_PER_PAGE
                       ? totalMoveNumbers - ROWS_PER_PAGE : 0;
@@ -125,20 +126,55 @@ void MoveHistoryScreen::draw() {
   }
 
   display->drawRoundRect(10, BUTTON_Y, 64, BUTTON_HEIGHT, 5, ILI9341_CYAN);
-  display->setCursor(32, BUTTON_Y + 15);
+  display->setCursor(30, BUTTON_Y + 15);
   display->setTextColor(ILI9341_WHITE);
   display->print("<");
 
-  display->drawRoundRect(82, BUTTON_Y, 76, BUTTON_HEIGHT, 5, ILI9341_YELLOW);
-  display->setCursor(105, BUTTON_Y + 15);
+  display->drawRoundRect(78, BUTTON_Y, 60, BUTTON_HEIGHT, 5, ILI9341_YELLOW);
+  display->setCursor(95, BUTTON_Y + 15);
   display->print("BACK");
 
-  display->drawRoundRect(166, BUTTON_Y, 64, BUTTON_HEIGHT, 5, ILI9341_CYAN);
-  display->setCursor(190, BUTTON_Y + 15);
+  display->drawRoundRect(142, BUTTON_Y, 64, BUTTON_HEIGHT, 5,
+                         game->canUndoLastMove() ? ILI9341_RED : 0x7BEF);
+  display->setTextColor(game->canUndoLastMove() ? ILI9341_WHITE : 0x7BEF);
+  display->setCursor(155, BUTTON_Y + 15);
+  display->print("UNDO");
+
+  display->drawRoundRect(210, BUTTON_Y, 20, BUTTON_HEIGHT, 5, ILI9341_CYAN);
+  display->setCursor(216, BUTTON_Y + 15);
   display->print(">");
+
+  if (confirmUndo) {
+    display->fillRoundRect(24, 103, 192, 94, 8, 0x0841);
+    display->drawRoundRect(24, 103, 192, 94, 8, ILI9341_YELLOW);
+    display->setTextSize(1);
+    display->setTextColor(ILI9341_WHITE);
+    display->setCursor(48, 120);
+    display->print("Undo the last move?");
+    display->drawRoundRect(43, 151, 68, 32, 5, ILI9341_RED);
+    display->setCursor(65, 163);
+    display->print("UNDO");
+    display->drawRoundRect(129, 151, 68, 32, 5, ILI9341_CYAN);
+    display->setCursor(149, 163);
+    display->print("CANCEL");
+  }
 }
 
 bool MoveHistoryScreen::handleTouch(const TouchPoint &point) {
+  if (confirmUndo) {
+    if (point.y >= 151 && point.y < 183) {
+      if (point.x >= 43 && point.x < 111) {
+        bool undone = game->undoLastMove();
+        confirmUndo = false;
+        if (undone) return Navigation::returnTo(*game);
+      } else if (point.x >= 129 && point.x < 197) {
+        confirmUndo = false;
+      }
+      return true;
+    }
+    return true;
+  }
+
   uint16_t totalMoveNumbers = (game->moveHistoryCount() + 1) / 2;
   uint16_t lastPageStart = totalMoveNumbers > ROWS_PER_PAGE
                              ? totalMoveNumbers - ROWS_PER_PAGE : 0;
@@ -151,9 +187,14 @@ bool MoveHistoryScreen::handleTouch(const TouchPoint &point) {
         firstMoveNumber = 0;
       return true;
     }
-    if (point.x >= 82 && point.x < 158)
+    if (point.x >= 78 && point.x < 138)
       return Navigation::goBack();
-    if (point.x >= 166 && point.x < 230) {
+    if (point.x >= 142 && point.x < 206) {
+      if (!game->canUndoLastMove()) return false;
+      confirmUndo = true;
+      return true;
+    }
+    if (point.x >= 210 && point.x < 230) {
       firstMoveNumber += ROWS_PER_PAGE;
       if (firstMoveNumber > lastPageStart) firstMoveNumber = lastPageStart;
       return true;

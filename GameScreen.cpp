@@ -3,7 +3,10 @@
 #include "Navigation.h"
 
 GameScreen::GameScreen()
-  : selectedSquare(-1),
+  : historyCountBeforeHumanMove(0),
+    hasUndoPosition(false),
+    hasHumanTurnSnapshot(false),
+    selectedSquare(-1),
     legalMoveCount(0),
     lastMove{255, 255, 0, 0},
     recordedMoveCount(0),
@@ -28,6 +31,16 @@ void GameScreen::refreshLegalMoves() {
 bool GameScreen::makeHumanMove(int from, int to) {
   for (uint8_t i = 0; i < legalMoveCount; ++i) {
     if (legalMoves[i].from == from && legalMoves[i].to == to) {
+      if (recordedMoveCount >= MAX_RECORDED_MOVES) {
+        hasUndoPosition = false;
+        hasHumanTurnSnapshot = false;
+      } else {
+        positionBeforeLastMove = position;
+        positionBeforeHumanMove = position;
+        historyCountBeforeHumanMove = recordedMoveCount;
+        hasUndoPosition = true;
+        hasHumanTurnSnapshot = true;
+      }
       recordMove(legalMoves[i]);
       ChessEngine::makeMove(position, legalMoves[i]);
       lastMove = legalMoves[i];
@@ -66,6 +79,8 @@ void GameScreen::startNewGame(bool playerFirst) {
   lastMove.from = 255;
   lastMove.to = 255;
   recordedMoveCount = 0;
+  hasUndoPosition = false;
+  hasHumanTurnSnapshot = false;
   historyTruncated = false;
   gameOver = false;
   waitingForAI = !playerFirst;
@@ -75,6 +90,13 @@ void GameScreen::startNewGame(bool playerFirst) {
 void GameScreen::makeAIMove() {
   ChessMove move;
   if (AIEngine::findBestMove(position, aiDepth, move)) {
+    if (recordedMoveCount < MAX_RECORDED_MOVES) {
+      positionBeforeLastMove = position;
+      hasUndoPosition = true;
+    } else {
+      hasUndoPosition = false;
+      hasHumanTurnSnapshot = false;
+    }
     recordMove(move);
     ChessEngine::makeMove(position, move);
     lastMove = move;
@@ -142,6 +164,32 @@ bool GameScreen::getRecordedMove(uint16_t index, RecordedMove &move) const {
 
 bool GameScreen::moveHistoryTruncated() const {
   return historyTruncated;
+}
+
+bool GameScreen::canUndoLastMove() const {
+  return hasUndoPosition && recordedMoveCount > 0;
+}
+
+bool GameScreen::undoLastMove() {
+  if (!canUndoLastMove()) return false;
+
+  if (hasHumanTurnSnapshot && historyCountBeforeHumanMove < recordedMoveCount) {
+    position = positionBeforeHumanMove;
+    recordedMoveCount = historyCountBeforeHumanMove;
+  } else {
+    position = positionBeforeLastMove;
+    --recordedMoveCount;
+  }
+  hasUndoPosition = false;
+  hasHumanTurnSnapshot = false;
+  selectedSquare = -1;
+  refreshLegalMoves();
+  lastMove = recordedMoveCount
+    ? moveHistory[recordedMoveCount - 1].move
+    : ChessMove{255, 255, 0, 0};
+  gameOver = legalMoveCount == 0 || position.halfmoveClock >= 100;
+  waitingForAI = !gameOver && position.whiteToMove != humanPlaysWhite;
+  return true;
 }
 
 void GameScreen::recordMove(const ChessMove &move) {

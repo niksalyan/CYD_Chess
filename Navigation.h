@@ -9,6 +9,7 @@ class Navigation {
 public:
   static void setRoot(Screen &screen);
   static bool navigateTo(Screen &screen);
+  static bool returnTo(Screen &screen);
   static bool goBack();
 
 private:

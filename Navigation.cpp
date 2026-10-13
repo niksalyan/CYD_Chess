@@ -19,6 +19,20 @@ bool Navigation::navigateTo(Screen &screen) {
   return true;
 }
 
+bool Navigation::returnTo(Screen &screen) {
+  for (int8_t i = (int8_t)historySize - 1; i >= 0; --i) {
+    if (history[i] == &screen) {
+      historySize = (uint8_t)i;
+      UI::setCurrentScreen(&screen);
+      return true;
+    }
+  }
+
+  historySize = 0;
+  UI::setCurrentScreen(&screen);
+  return true;
+}
+
 bool Navigation::goBack() {
   if (historySize == 0) return false;
 

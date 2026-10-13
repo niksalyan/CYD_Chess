@@ -23,6 +23,8 @@ public:
   uint16_t moveHistoryCount() const;
   bool getRecordedMove(uint16_t index, RecordedMove &move) const;
   bool moveHistoryTruncated() const;
+  bool canUndoLastMove() const;
+  bool undoLastMove();
 
 private:
   static const uint16_t MAX_RECORDED_MOVES = 512;
@@ -36,6 +38,11 @@ private:
   void recordMove(const ChessMove &move);
 
   ChessPosition position;
+  ChessPosition positionBeforeLastMove;
+  ChessPosition positionBeforeHumanMove;
+  uint16_t historyCountBeforeHumanMove;
+  bool hasUndoPosition;
+  bool hasHumanTurnSnapshot;
   ChessBoard chessBoard;
   int selectedSquare;
   ChessMove legalMoves[ChessEngine::MAX_MOVES];

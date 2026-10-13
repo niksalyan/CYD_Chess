@@ -21,6 +21,7 @@ private:
   Adafruit_ILI9341 *display;
   GameScreen *game;
   uint16_t firstMoveNumber;
+  bool confirmUndo;
 };
 
 #endif
