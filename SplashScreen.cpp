@@ -1,7 +1,6 @@
 #include "SplashScreen.h"
 
-#include <Arduino.h>
-
+#include "ChessGraphics.h"
 #include "Navigation.h"
 
 namespace {
@@ -9,10 +8,9 @@ namespace {
   const uint16_t PANEL = 0x10A2;
   const uint16_t BOARD_LIGHT = 0xBDF7;
   const uint16_t BOARD_DARK = 0x39C7;
-  const uint32_t SPLASH_DURATION_MS = 2400;
 
   void drawMiniBoard(Adafruit_ILI9341 &display, int centerX, int top) {
-    const int squareSize = 26;
+    const int squareSize = 32;
     const int boardSize = squareSize * 4;
     int left = centerX - boardSize / 2;
 
@@ -33,12 +31,10 @@ namespace {
         uint16_t squareColor = ((row + column) & 1)
                                  ? BOARD_LIGHT : BOARD_DARK;
         display.fillRect(x, y, squareSize, squareSize, squareColor);
-
-        display.setTextSize(2);
-        display.setTextColor(pieces[row][column] >= 'a'
-                               ? ILI9341_CYAN : ILI9341_WHITE);
-        display.setCursor(x + 8, y + 6);
-        display.write(pieces[row][column]);
+        ChessGraphics::drawPiece(display, pieces[row][column],
+                                 x + squareSize / 2,
+                                 y + squareSize / 2,
+                                 squareSize / 2);
       }
     }
 
@@ -48,7 +44,7 @@ namespace {
 }
 
 SplashScreen::SplashScreen()
-  : display(0), game(0), startedAt(0) {
+  : display(0), game(0) {
 }
 
 SplashScreen &SplashScreen::instance() {
@@ -59,7 +55,6 @@ SplashScreen &SplashScreen::instance() {
 void SplashScreen::begin(Adafruit_ILI9341 &tft, GameScreen &gameScreen) {
   display = &tft;
   game = &gameScreen;
-  startedAt = millis();
 }
 
 void SplashScreen::draw() {
@@ -104,12 +99,6 @@ void SplashScreen::continueToGame() {
 }
 
 bool SplashScreen::handleTouch(const TouchPoint &) {
-  continueToGame();
-  return game != 0;
-}
-
-bool SplashScreen::update() {
-  if (millis() - startedAt < SPLASH_DURATION_MS) return false;
   continueToGame();
   return game != 0;
 }

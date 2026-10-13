@@ -62,8 +62,7 @@ them.
 
 ## Controls
 
-The splash screen appears briefly at startup. Tap anywhere to continue
-immediately to the game.
+The splash screen waits for input. Tap anywhere on it to continue to the game.
 
 ### Game screen
 

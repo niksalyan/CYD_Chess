@@ -12,7 +12,6 @@ public:
   void begin(Adafruit_ILI9341 &display, GameScreen &game);
   void draw();
   bool handleTouch(const TouchPoint &point);
-  bool update();
 
 private:
   SplashScreen();
@@ -20,7 +19,6 @@ private:
 
   Adafruit_ILI9341 *display;
   GameScreen *game;
-  uint32_t startedAt;
 };
 
 #endif
