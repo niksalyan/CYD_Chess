@@ -128,7 +128,7 @@ void ChessBoard::updateMatrix(const ChessPosition &position, int selectedSquare,
       // Calculate base matrix background pattern colors
       bool isLight = ((file + rank) & 1) != 0;
       uint32_t matrixColor = isLight ? pixels.Color(70, 70, 70) : pixels.Color(20, 20, 20);
-
+      
       // --- Last Move Highlight Logic ---
       if (square == lastMove.from || square == lastMove.to) {
         if (position.whiteToMove) {

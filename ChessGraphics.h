@@ -12,9 +12,6 @@ namespace ChessGraphics {
   // size: radius in pixels
   // tft: display object to draw on
   void drawPiece(Adafruit_ILI9341 &tft, char piece, int x, int y, int size);
-
-  // Draw all pieces on the board
-  void drawAllPieces(Adafruit_ILI9341 &tft, const ChessPosition &position, int squareSize);
 }
 
 #endif

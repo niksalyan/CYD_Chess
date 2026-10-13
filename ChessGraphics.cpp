@@ -62,21 +62,4 @@ namespace ChessGraphics {
       return;
     }
   }
-
-  void drawAllPieces(Adafruit_ILI9341 &tft, const ChessPosition &position, int squareSize) {
-    int pieceSize = (squareSize * 2) / 5;
-    int centerOffset = squareSize / 2;
-
-    for (int square = 0; square < 64; ++square) {
-      char piece = position.board[square];
-      if (!piece) continue;
-
-      int file = square & 7;
-      int rank = square >> 3;
-      int x = file * squareSize + centerOffset;
-      int y = (7 - rank) * squareSize + centerOffset;
-
-      drawPiece(tft, piece, x, y, pieceSize);
-    }
-  }
 }
