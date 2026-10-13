@@ -28,20 +28,21 @@ public:
   void draw(const ChessPosition &position, int selectedSquare,
             const ChessMove *legalMoves, uint8_t legalMoveCount,
             const ChessMove &lastMove, uint8_t aiDepth,
-            bool gameOver, bool thinking);
+            bool gameOver, bool thinking, bool humanPlaysWhite);
   int squareAt(int x, int y) const;
   bool isNewGameButton(int x, int y) const;
   bool isDepthButton(int x, int y) const;
 
   
-  bool isConfirmNewGameButton(int x, int y) const;
+  bool isPlayerFirstButton(int x, int y) const;
+  bool isAIFirstButton(int x, int y) const;
   bool isCancelNewGameButton(int x, int y) const;
 
   
   void drawPanel(const ChessPosition &position, uint8_t aiDepth,
-                 bool gameOver, bool thinking);
+                 bool gameOver, bool thinking, bool humanPlaysWhite);
 
-  void drawNewGameConfirmation();
+  void drawFirstMoveSelection();
 
 private:
   Adafruit_ILI9341 *tft;
@@ -49,10 +50,9 @@ private:
                  const ChessMove *legalMoves, uint8_t legalMoveCount,
                  const ChessMove &lastMove);
 
-                 // Add this line to the public: section of your ChessBoard class in ChessBoard.h
   void updateMatrix(const ChessPosition &position, int selectedSquare,
                   const ChessMove *legalMoves, uint8_t legalMoveCount,
-                  const ChessMove &lastMove);
+                  const ChessMove &lastMove, bool humanPlaysWhite);
 
 
   void drawMatrix(uint8_t x, uint8_t y, uint32_t color);

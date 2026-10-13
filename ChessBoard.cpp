@@ -45,13 +45,26 @@ bool ChessBoard::isDepthButton(int x, int y) const {
   return x >= BUTTON_X && x < BUTTON_X + 78 && y >= PANEL_Y_LOC + 42 && y < PANEL_Y_LOC + 72;
 }
 
+bool ChessBoard::isPlayerFirstButton(int x, int y) const {
+  return x >= 32 && x < 116 && y >= 148 && y < 180;
+}
+
+bool ChessBoard::isAIFirstButton(int x, int y) const {
+  return x >= 124 && x < 208 && y >= 148 && y < 180;
+}
+
+bool ChessBoard::isCancelNewGameButton(int x, int y) const {
+  return x >= 78 && x < 162 && y >= 188 && y < 212;
+}
+
 void ChessBoard::draw(const ChessPosition &position, int selectedSquare,
                       const ChessMove *legalMoves, uint8_t legalMoveCount,
                       const ChessMove &lastMove, uint8_t aiDepth,
-                      bool gameOver, bool thinking) {
+                      bool gameOver, bool thinking, bool humanPlaysWhite) {
   drawBoard(position, selectedSquare, legalMoves, legalMoveCount, lastMove);
-  drawPanel(position, aiDepth, gameOver, thinking);
-  updateMatrix(position, selectedSquare, legalMoves, legalMoveCount, lastMove);
+  drawPanel(position, aiDepth, gameOver, thinking, humanPlaysWhite);
+  updateMatrix(position, selectedSquare, legalMoves, legalMoveCount, lastMove,
+               humanPlaysWhite);
 }
 
 
@@ -114,7 +127,7 @@ void ChessBoard::drawBoard(const ChessPosition &position, int selectedSquare,
 // 3. New Dedicated Matrix Update Function (With independent timing hooks)
 void ChessBoard::updateMatrix(const ChessPosition &position, int selectedSquare,
                               const ChessMove *legalMoves, uint8_t legalMoveCount,
-                              const ChessMove &lastMove) {
+                              const ChessMove &lastMove, bool humanPlaysWhite) {
   
   // Optional: Delay before processing matrix (e.g., let TFT finish rendering)
   delay(5); 
@@ -131,11 +144,9 @@ void ChessBoard::updateMatrix(const ChessPosition &position, int selectedSquare,
       
       // --- Last Move Highlight Logic ---
       if (square == lastMove.from || square == lastMove.to) {
-        if (position.whiteToMove) {
-          // It's your turn, meaning the AI just made this move -> RED
+        if (position.whiteToMove == humanPlaysWhite) {
           matrixColor = pixels.Color(255, 0, 0); 
         } else {
-          // It's the AI's turn, meaning YOU just made this move -> GREEN (or choose Orange/Cyan)
           matrixColor = pixels.Color(0, 255, 0); 
         }
       }
@@ -214,7 +225,7 @@ void ChessBoard::setPixel(int x, int y, uint32_t color) {
 
 
 void ChessBoard::drawPanel(const ChessPosition &position, uint8_t aiDepth,
-                           bool gameOver, bool thinking) {
+                           bool gameOver, bool thinking, bool humanPlaysWhite) {
   tft->fillRect(PANEL_X, PANEL_Y, PANEL_W, PANEL_H, PANEL_BG);
   tft->setTextWrap(false);
   tft->setTextSize(1);
@@ -241,7 +252,7 @@ void ChessBoard::drawPanel(const ChessPosition &position, uint8_t aiDepth,
     tft->print("AI THINKING...");
   } else {
     tft->setTextColor(ILI9341_CYAN);
-    tft->print(position.whiteToMove ? "YOUR TURN" : "AI TURN");
+    tft->print(position.whiteToMove == humanPlaysWhite ? "YOUR TURN" : "AI TURN");
     if (ChessEngine::isInCheck(position, position.whiteToMove)) {
       tft->setCursor(PANEL_X + 8, PANEL_Y + 42);
       tft->setTextColor(ILI9341_RED);
@@ -252,9 +263,9 @@ void ChessBoard::drawPanel(const ChessPosition &position, uint8_t aiDepth,
   int middleX = PANEL_X + 95;
   tft->setTextColor(ILI9341_WHITE);
   tft->setCursor(middleX, PANEL_Y + 8);
-  tft->print("W: YOU");
+  tft->print(humanPlaysWhite ? "W: YOU" : "W: AI");
   tft->setCursor(middleX, PANEL_Y + 23);
-  tft->print("B: AI");
+  tft->print(humanPlaysWhite ? "B: AI" : "B: YOU");
 
   int buttonX = PANEL_X + 155;
   
@@ -269,11 +280,11 @@ void ChessBoard::drawPanel(const ChessPosition &position, uint8_t aiDepth,
   tft->print(aiDepth);
 }
 
-void ChessBoard::drawNewGameConfirmation() {
+void ChessBoard::drawFirstMoveSelection() {
   const int x = 20;
-  const int y = 105;
+  const int y = 100;
   const int w = 200;
-  const int h = 100;
+  const int h = 120;
 
   // Dim the board behind the dialog.
   tft->fillRect(x, y, w, h, ILI9341_BLACK);
@@ -282,36 +293,29 @@ void ChessBoard::drawNewGameConfirmation() {
   tft->setTextWrap(false);
   tft->setTextSize(1);
   tft->setTextColor(ILI9341_WHITE);
-  tft->setCursor(x + 32, y + 17);
-  tft->print("Start a new game?");
+  tft->setCursor(x + 34, y + 17);
+  tft->print("Who goes first?");
 
-  // Cancel button
   tft->fillRoundRect(
     x + 12, y + 48, 84, 32, 5, 0x4208
   );
   tft->drawRoundRect(
-    x + 12, y + 48, 84, 32, 5, ILI9341_WHITE
+    x + 12, y + 48, 84, 32, 5, ILI9341_CYAN
   );
   tft->setCursor(x + 31, y + 60);
-  tft->print("CANCEL");
+  tft->print("PLAYER");
 
-  // Confirm button
   tft->fillRoundRect(
     x + 104, y + 48, 84, 32, 5, 0x7800
   );
   tft->drawRoundRect(
-    x + 104, y + 48, 84, 32, 5, ILI9341_RED
+    x + 104, y + 48, 84, 32, 5, ILI9341_YELLOW
   );
-  tft->setCursor(x + 117, y + 60);
-  tft->print("NEW GAME");
-}
+  tft->setCursor(x + 130, y + 60);
+  tft->print("AI");
 
-bool ChessBoard::isConfirmNewGameButton(int x, int y) const {
-  return x >= 124 && x < 208 &&
-         y >= 153 && y < 185;
-}
-
-bool ChessBoard::isCancelNewGameButton(int x, int y) const {
-  return x >= 32 && x < 116 &&
-         y >= 153 && y < 185;
+  tft->fillRoundRect(x + 58, y + 88, 84, 24, 5, 0x4208);
+  tft->drawRoundRect(x + 58, y + 88, 84, 24, 5, ILI9341_WHITE);
+  tft->setCursor(x + 88, y + 96);
+  tft->print("CANCEL");
 }

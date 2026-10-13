@@ -44,6 +44,7 @@ ChessMove lastMove = { 255, 255, 0, 0 };
 uint8_t aiDepth = 3;
 bool gameOver = false;
 bool waitingForAI = false;
+bool humanPlaysWhite = true;
 bool previousTouch = false;
 uint32_t lastTouchMillis = 0;
 
@@ -87,24 +88,30 @@ static bool makeHumanMove(int from, int to) {
 
 static void handleBoardTouch(int x, int y) {
   int square = chessBoard.squareAt(x, y);
-  if (square < 0 || gameOver || waitingForAI || !position.whiteToMove) return;
+  if (square < 0 || gameOver || waitingForAI ||
+      position.whiteToMove != humanPlaysWhite) return;
 
   if (selectedSquare < 0) {
-    if (ChessEngine::isWhitePiece(position.board[square])) selectedSquare = square;
+    if (position.board[square] &&
+        ChessEngine::isWhitePiece(position.board[square]) == humanPlaysWhite)
+      selectedSquare = square;
   } else if (square == selectedSquare) {
     selectedSquare = -1;
   } else if (!makeHumanMove(selectedSquare, square)) {
-    if (ChessEngine::isWhitePiece(position.board[square])) selectedSquare = square;
+    if (position.board[square] &&
+        ChessEngine::isWhitePiece(position.board[square]) == humanPlaysWhite)
+      selectedSquare = square;
   }
 }
 
-static void startNewGame() {
+static void startNewGame(bool playerFirst) {
   ChessEngine::reset(position);
+  humanPlaysWhite = playerFirst;
   selectedSquare = -1;
   lastMove.from = 255;
   lastMove.to = 255;
   gameOver = false;
-  waitingForAI = false;
+  waitingForAI = !playerFirst;
   refreshLegalMoves();
 }
 
@@ -132,9 +139,9 @@ void setup() {
 
 
   chessBoard.begin(tft);
-  startNewGame();
+  startNewGame(true);
   chessBoard.draw(position, selectedSquare, legalMoves, legalMoveCount, lastMove,
-                  aiDepth, gameOver, false);
+                  aiDepth, gameOver, false, humanPlaysWhite);
 }
 
 void loop() {
@@ -147,10 +154,13 @@ void loop() {
     lastTouchMillis = now;
 
     if (showNewGameDialog) {
-      // While the dialog is open, ignore all other controls.
-      if (chessBoard.isConfirmNewGameButton(x, y)) {
+      if (chessBoard.isPlayerFirstButton(x, y)) {
         showNewGameDialog = false;
-        startNewGame();
+        startNewGame(true);
+        redraw = true;
+      } else if (chessBoard.isAIFirstButton(x, y)) {
+        showNewGameDialog = false;
+        startNewGame(false);
         redraw = true;
       } else if (chessBoard.isCancelNewGameButton(x, y)) {
         showNewGameDialog = false;
@@ -171,7 +181,7 @@ void loop() {
 
   if (waitingForAI) {
     chessBoard.draw(position, selectedSquare, legalMoves, legalMoveCount, lastMove,
-                    aiDepth, false, true);
+                    aiDepth, false, true, humanPlaysWhite);
     makeAIMove();
     gameOver = legalMoveCount == 0 || position.halfmoveClock >= 100;
     redraw = true;
@@ -179,10 +189,10 @@ void loop() {
 
   if (redraw) {
     chessBoard.draw(position, selectedSquare, legalMoves, legalMoveCount,
-                    lastMove, aiDepth, gameOver, false);
+                    lastMove, aiDepth, gameOver, false, humanPlaysWhite);
 
     if (showNewGameDialog) {
-      chessBoard.drawNewGameConfirmation();
+      chessBoard.drawFirstMoveSelection();
     }
   }
   delay(15);
