@@ -14,6 +14,7 @@ public:
   void draw();
   bool handleTouch(int x, int y);
   bool update();
+  void requestNewGame();
 
 private:
   void draw(bool thinking);

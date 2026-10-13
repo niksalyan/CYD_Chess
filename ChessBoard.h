@@ -30,7 +30,7 @@ public:
             const ChessMove &lastMove, uint8_t aiDepth,
             bool gameOver, bool thinking, bool humanPlaysWhite);
   int squareAt(int x, int y, bool humanPlaysWhite) const;
-  bool isNewGameButton(int x, int y) const;
+  bool isMenuButton(int x, int y) const;
   bool isDepthButton(int x, int y) const;
 
   

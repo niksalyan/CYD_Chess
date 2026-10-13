@@ -4,6 +4,7 @@
 #include <XPT2046_Touchscreen.h>
 
 #include "GameScreen.h"
+#include "MenuScreen.h"
 #include "Navigation.h"
 #include "UI.h"
 
@@ -64,6 +65,7 @@ void setup() {
   tft.setRotation(0);
 
   gameScreen.begin(tft);
+  MenuScreen::instance().begin(tft, gameScreen);
   Navigation::setRoot(gameScreen);
   UI::draw();
 }

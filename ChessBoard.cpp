@@ -34,7 +34,7 @@ int ChessBoard::squareAt(int x, int y, bool humanPlaysWhite) const {
   return rank * 8 + file;
 }
 
-bool ChessBoard::isNewGameButton(int x, int y) const {
+bool ChessBoard::isMenuButton(int x, int y) const {
   const int BUTTON_X = 155;
   const int PANEL_Y_LOC = 240;
   return x >= BUTTON_X && x < BUTTON_X + 78 && y >= PANEL_Y_LOC + 6 && y < PANEL_Y_LOC + 36;
@@ -276,8 +276,8 @@ void ChessBoard::drawPanel(const ChessPosition &position, uint8_t aiDepth,
   
   tft->drawRoundRect(buttonX, PANEL_Y + 6, 78, 30, 4, ILI9341_CYAN);
   tft->setTextColor(ILI9341_WHITE);
-  tft->setCursor(buttonX + 16, PANEL_Y + 17);
-  tft->print("RESET");
+  tft->setCursor(buttonX + 22, PANEL_Y + 17);
+  tft->print("MENU");
 
   tft->drawRoundRect(buttonX, PANEL_Y + 42, 78, 30, 4, ILI9341_YELLOW);
   tft->setCursor(buttonX + 16, PANEL_Y + 53);

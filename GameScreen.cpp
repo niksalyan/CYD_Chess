@@ -1,4 +1,6 @@
 #include "GameScreen.h"
+#include "MenuScreen.h"
+#include "Navigation.h"
 
 GameScreen::GameScreen()
   : selectedSquare(-1),
@@ -104,9 +106,8 @@ bool GameScreen::handleTouch(int x, int y) {
     return false;
   }
 
-  if (chessBoard.isNewGameButton(x, y)) {
-    showFirstMoveSelection = true;
-    return true;
+  if (chessBoard.isMenuButton(x, y)) {
+    return Navigation::navigateTo(MenuScreen::instance());
   }
   if (chessBoard.isDepthButton(x, y)) {
     aiDepth = aiDepth >= 4 ? 2 : aiDepth + 1;
@@ -115,6 +116,10 @@ bool GameScreen::handleTouch(int x, int y) {
 
   handleBoardTouch(x, y);
   return true;
+}
+
+void GameScreen::requestNewGame() {
+  showFirstMoveSelection = true;
 }
 
 bool GameScreen::update() {
