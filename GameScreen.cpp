@@ -6,6 +6,8 @@ GameScreen::GameScreen()
   : selectedSquare(-1),
     legalMoveCount(0),
     lastMove{255, 255, 0, 0},
+    recordedMoveCount(0),
+    historyTruncated(false),
     aiDepth(3),
     gameOver(false),
     waitingForAI(false),
@@ -26,6 +28,7 @@ void GameScreen::refreshLegalMoves() {
 bool GameScreen::makeHumanMove(int from, int to) {
   for (uint8_t i = 0; i < legalMoveCount; ++i) {
     if (legalMoves[i].from == from && legalMoves[i].to == to) {
+      recordMove(legalMoves[i]);
       ChessEngine::makeMove(position, legalMoves[i]);
       lastMove = legalMoves[i];
       selectedSquare = -1;
@@ -62,6 +65,8 @@ void GameScreen::startNewGame(bool playerFirst) {
   selectedSquare = -1;
   lastMove.from = 255;
   lastMove.to = 255;
+  recordedMoveCount = 0;
+  historyTruncated = false;
   gameOver = false;
   waitingForAI = !playerFirst;
   refreshLegalMoves();
@@ -70,6 +75,7 @@ void GameScreen::startNewGame(bool playerFirst) {
 void GameScreen::makeAIMove() {
   ChessMove move;
   if (AIEngine::findBestMove(position, aiDepth, move)) {
+    recordMove(move);
     ChessEngine::makeMove(position, move);
     lastMove = move;
     refreshLegalMoves();
@@ -87,7 +93,9 @@ void GameScreen::draw(bool thinking) {
   if (showFirstMoveSelection) chessBoard.drawFirstMoveSelection();
 }
 
-bool GameScreen::handleTouch(int x, int y) {
+bool GameScreen::handleTouch(const TouchPoint &point) {
+  int x = point.x;
+  int y = point.y;
   if (showFirstMoveSelection) {
     if (chessBoard.isPlayerFirstButton(x, y)) {
       showFirstMoveSelection = false;
@@ -120,6 +128,28 @@ bool GameScreen::handleTouch(int x, int y) {
 
 void GameScreen::requestNewGame() {
   showFirstMoveSelection = true;
+}
+
+uint16_t GameScreen::moveHistoryCount() const {
+  return recordedMoveCount;
+}
+
+bool GameScreen::getRecordedMove(uint16_t index, RecordedMove &move) const {
+  if (index >= recordedMoveCount) return false;
+  move = moveHistory[index];
+  return true;
+}
+
+bool GameScreen::moveHistoryTruncated() const {
+  return historyTruncated;
+}
+
+void GameScreen::recordMove(const ChessMove &move) {
+  if (recordedMoveCount >= MAX_RECORDED_MOVES) {
+    historyTruncated = true;
+    return;
+  }
+  moveHistory[recordedMoveCount++] = {move, position.whiteToMove};
 }
 
 bool GameScreen::update() {

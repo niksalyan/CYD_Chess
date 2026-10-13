@@ -9,7 +9,7 @@ class UI {
 public:
   static Screen *currentScreen();
   static void draw();
-  static bool handleTouch(int x, int y);
+  static bool handleTouch(const TouchPoint &point);
   static bool update();
 
 private:

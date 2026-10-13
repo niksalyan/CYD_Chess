@@ -14,8 +14,8 @@ void UI::draw() {
   if (activeScreen) activeScreen->draw();
 }
 
-bool UI::handleTouch(int x, int y) {
-  return activeScreen ? activeScreen->handleTouch(x, y) : false;
+bool UI::handleTouch(const TouchPoint &point) {
+  return activeScreen ? activeScreen->handleTouch(point) : false;
 }
 
 bool UI::update() {

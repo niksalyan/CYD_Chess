@@ -10,7 +10,7 @@ public:
   static MenuScreen &instance();
   void begin(Adafruit_ILI9341 &display, GameScreen &game);
   void draw();
-  bool handleTouch(int x, int y);
+  bool handleTouch(const TouchPoint &point);
 
 private:
   MenuScreen();

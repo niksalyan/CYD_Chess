@@ -6,6 +6,7 @@
 #include "GameScreen.h"
 #include "MenuScreen.h"
 #include "Navigation.h"
+#include "TouchCalibrationScreen.h"
 #include "UI.h"
 
 #define XPT2046_IRQ 36
@@ -42,13 +43,41 @@ static int mapTouchAxis(int value, int low, int high, int extent, bool invert) {
   return invert ? extent - 1 - (int)mapped : (int)mapped;
 }
 
-static bool readTouchPoint(int &x, int &y) {
+static bool readTouchPoint(TouchPoint &touchPoint) {
   if (!touch.touched()) return false;
   TS_Point point = touch.getPoint();
-  int rawX = TOUCH_SWAP_XY ? point.y : point.x;
-  int rawY = TOUCH_SWAP_XY ? point.x : point.y;
-  x = mapTouchAxis(rawX, TOUCH_X_MIN, TOUCH_X_MAX, tft.width(), TOUCH_INVERT_X);
-  y = mapTouchAxis(rawY, TOUCH_Y_MIN, TOUCH_Y_MAX, tft.height(), TOUCH_INVERT_Y);
+  touchPoint.rawX = TOUCH_SWAP_XY ? point.y : point.x;
+  touchPoint.rawY = TOUCH_SWAP_XY ? point.x : point.y;
+  if (!TouchCalibrationScreen::instance().mapRawPoint(
+        touchPoint.rawX, touchPoint.rawY, touchPoint.x, touchPoint.y)) {
+    touchPoint.x = mapTouchAxis(touchPoint.rawX, TOUCH_X_MIN, TOUCH_X_MAX,
+                                tft.width(), TOUCH_INVERT_X);
+    touchPoint.y = mapTouchAxis(touchPoint.rawY, TOUCH_Y_MIN, TOUCH_Y_MAX,
+                                tft.height(), TOUCH_INVERT_Y);
+  }
+  return true;
+}
+
+static bool enterCalibrationIfHeldAtStartup() {
+  if (!touch.touched()) return false;
+
+  tft.fillScreen(ILI9341_BLACK);
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextSize(2);
+  tft.setCursor(22, 120);
+  tft.print("Hold for touch");
+  tft.setCursor(56, 148);
+  tft.print("calibration");
+
+  uint32_t start = millis();
+  while (touch.touched() && millis() - start < 1500) delay(10);
+  if (!touch.touched()) return false;
+
+  TouchCalibrationScreen::instance().start();
+  if (!Navigation::navigateTo(TouchCalibrationScreen::instance()))
+    return false;
+
+  while (touch.touched()) delay(10);
   return true;
 }
 
@@ -66,18 +95,20 @@ void setup() {
 
   gameScreen.begin(tft);
   MenuScreen::instance().begin(tft, gameScreen);
+  TouchCalibrationScreen::instance().begin(tft);
   Navigation::setRoot(gameScreen);
+  enterCalibrationIfHeldAtStartup();
   UI::draw();
 }
 
 void loop() {
-  int x, y;
-  bool isTouched = readTouchPoint(x, y);
+  TouchPoint point;
+  bool isTouched = readTouchPoint(point);
   uint32_t now = millis();
 
   if (isTouched && !previousTouch && now - lastTouchMillis > 180) {
     lastTouchMillis = now;
-    if (UI::handleTouch(x, y)) UI::draw();
+    if (UI::handleTouch(point)) UI::draw();
   }
   previousTouch = isTouched;
 
