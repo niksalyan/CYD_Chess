@@ -22,7 +22,7 @@ namespace {
 void ChessBoard::begin(Adafruit_ILI9341 &display) {
   tft = &display;
   pixels.begin();
-  pixels.setBrightness(128); // Brightness level out of 255
+  pixels.setBrightness(144); // Brightness level out of 255
   pixels.show();
 }
 
