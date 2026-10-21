@@ -80,6 +80,7 @@ bool MenuScreen::handleTouch(const TouchPoint &point) {
   if (x >= CARD_X && x < CARD_X + CARD_W &&
       y >= RESET_BUTTON_Y && y < RESET_BUTTON_Y + CARD_H) {
     if (!game || !Navigation::goBack()) return false;
+    game->invalidatePanel();
     game->requestNewGame();
     return true;
   }
@@ -98,8 +99,10 @@ bool MenuScreen::handleTouch(const TouchPoint &point) {
   }
 
   if (x >= CARD_X && x < CARD_X + CARD_W &&
-      y >= BACK_BUTTON_Y && y < BACK_BUTTON_Y + 40)
+      y >= BACK_BUTTON_Y && y < BACK_BUTTON_Y + 40) {
+    if (game) game->invalidatePanel();
     return Navigation::goBack();
+  }
 
   return false;
 }

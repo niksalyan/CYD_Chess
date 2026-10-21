@@ -20,6 +20,7 @@ public:
   bool handleTouch(const TouchPoint &point);
   bool update();
   void requestNewGame();
+  void invalidatePanel();
   uint16_t moveHistoryCount() const;
   bool getRecordedMove(uint16_t index, RecordedMove &move) const;
   bool moveHistoryTruncated() const;

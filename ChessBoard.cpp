@@ -6,56 +6,72 @@ Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 namespace {
   const int SQUARE_SIZE = 30;
   const int BOARD_SIZE = 240;
-  
+  const int BOARD_Y = 8;
+
   const int PANEL_X = 0;
-  const int PANEL_Y = 240;
+  const int PANEL_Y = BOARD_Y + BOARD_SIZE;
   const int PANEL_W = 240;
-  const int PANEL_H = 80;
+  const int PANEL_H = 320 - PANEL_Y;
 
   const uint16_t LIGHT_SQUARE = 0xD69A;
   const uint16_t DARK_SQUARE = 0x5AEB;
   const uint16_t HIGHLIGHT = 0xFFE0;
   const uint16_t MOVE_HINT = 0x07E0;
-  const uint16_t PANEL_BG = 0x18E3;
 }
 
 void ChessBoard::begin(Adafruit_ST7789 &display) {
   tft = &display;
+  panelBackgroundDrawn = false;
   pixels.begin();
   pixels.setBrightness(144); // Brightness level out of 255
   pixels.show();
 }
 
+void ChessBoard::invalidatePanel() {
+  panelBackgroundDrawn = false;
+}
+
+void ChessBoard::clearDisplay() {
+  if (!tft) return;
+  tft->fillScreen(ST77XX_BLACK);
+  panelBackgroundDrawn = false;
+}
+
 int ChessBoard::squareAt(int x, int y, bool humanPlaysWhite) const {
-  if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE) return -1;
+  if (x < 0 || x >= BOARD_SIZE || y < BOARD_Y || y >= BOARD_Y + BOARD_SIZE)
+    return -1;
   int file = x / SQUARE_SIZE;
-  int rank = humanPlaysWhite ? 7 - y / SQUARE_SIZE : y / SQUARE_SIZE;
+  int boardY = y - BOARD_Y;
+  int rank = humanPlaysWhite ? 7 - boardY / SQUARE_SIZE : boardY / SQUARE_SIZE;
   if (!humanPlaysWhite) file = 7 - file;
   return rank * 8 + file;
 }
 
 bool ChessBoard::isMenuButton(int x, int y) const {
-  const int BUTTON_X = 155;
-  const int PANEL_Y_LOC = 240;
-  return x >= BUTTON_X && x < BUTTON_X + 78 && y >= PANEL_Y_LOC + 6 && y < PANEL_Y_LOC + 36;
+  const int BUTTON_X = PANEL_X + 155;
+  return x >= BUTTON_X && x < BUTTON_X + 78 &&
+         y >= PANEL_Y + 6 && y < PANEL_Y + 36;
 }
 
 bool ChessBoard::isDepthButton(int x, int y) const {
-  const int BUTTON_X = 155;
-  const int PANEL_Y_LOC = 240;
-  return x >= BUTTON_X && x < BUTTON_X + 78 && y >= PANEL_Y_LOC + 42 && y < PANEL_Y_LOC + 72;
+  const int BUTTON_X = PANEL_X + 155;
+  return x >= BUTTON_X && x < BUTTON_X + 78 &&
+         y >= PANEL_Y + 42 && y < PANEL_Y + 72;
 }
 
 bool ChessBoard::isPlayerFirstButton(int x, int y) const {
-  return x >= 28 && x < 116 && y >= 124 && y < 196;
+  return x >= 28 && x < 116 &&
+         y >= 124 + BOARD_Y && y < 196 + BOARD_Y;
 }
 
 bool ChessBoard::isAIFirstButton(int x, int y) const {
-  return x >= 124 && x < 212 && y >= 124 && y < 196;
+  return x >= 124 && x < 212 &&
+         y >= 124 + BOARD_Y && y < 196 + BOARD_Y;
 }
 
 bool ChessBoard::isCancelNewGameButton(int x, int y) const {
-  return x >= 78 && x < 162 && y >= 210 && y < 240;
+  return x >= 78 && x < 162 &&
+         y >= 210 + BOARD_Y && y < 240 + BOARD_Y;
 }
 
 void ChessBoard::draw(const ChessPosition &position, int selectedSquare,
@@ -78,13 +94,13 @@ void ChessBoard::drawBoard(const ChessPosition &position, int selectedSquare,
   int centerOffset = SQUARE_SIZE / 2;
   int pieceSize = (SQUARE_SIZE * 2) / 5;
 
-  for (int rank = 0; rank < 8; ++rank) {
-    for (int file = 0; file < 8; ++file) {
+  for (int displayRank = 0; displayRank < 8; ++displayRank) {
+    for (int displayFile = 0; displayFile < 8; ++displayFile) {
+      int file = humanPlaysWhite ? displayFile : 7 - displayFile;
+      int rank = humanPlaysWhite ? 7 - displayRank : displayRank;
       int square = rank * 8 + file;
-      int displayFile = humanPlaysWhite ? file : 7 - file;
-      int displayRank = humanPlaysWhite ? 7 - rank : rank;
       int x = displayFile * SQUARE_SIZE;
-      int y = displayRank * SQUARE_SIZE;
+      int y = BOARD_Y + displayRank * SQUARE_SIZE;
 
       // Determine TFT Colors
       bool isLight = ((file + rank) & 1) != 0;
@@ -231,14 +247,21 @@ void ChessBoard::setPixel(int x, int y, uint32_t color) {
 
 void ChessBoard::drawPanel(const ChessPosition &position, uint8_t aiDepth,
                            bool gameOver, bool thinking, bool humanPlaysWhite) {
-  tft->fillRect(PANEL_X, PANEL_Y, PANEL_W, PANEL_H, PANEL_BG);
   tft->setTextWrap(false);
   tft->setTextSize(1);
-  
-  tft->setTextColor(ST77XX_WHITE);
+
+  if (!panelBackgroundDrawn) {
+    tft->fillRect(PANEL_X, PANEL_Y, PANEL_W, PANEL_H, ST77XX_BLACK);
+    tft->drawFastHLine(PANEL_X + 6, PANEL_Y + 20, 75, 0x7BEF);
+    int buttonX = PANEL_X + 155;
+    tft->drawRoundRect(buttonX, PANEL_Y + 6, 78, 30, 4, ST77XX_CYAN);
+    tft->drawRoundRect(buttonX, PANEL_Y + 42, 78, 30, 4, ST77XX_YELLOW);
+    panelBackgroundDrawn = true;
+  }
+
+  tft->setTextColor(ST77XX_WHITE, ST77XX_BLACK);
   tft->setCursor(PANEL_X + 8, PANEL_Y + 8);
   tft->print("CYD CHESS");
-  tft->drawFastHLine(PANEL_X + 6, PANEL_Y + 20, 75, 0x7BEF);
 
   tft->setCursor(PANEL_X + 8, PANEL_Y + 30);
   if (gameOver) {
@@ -246,48 +269,51 @@ void ChessBoard::drawPanel(const ChessPosition &position, uint8_t aiDepth,
     uint8_t count = ChessEngine::getLegalMoves(position, moves, ChessEngine::MAX_MOVES);
     if (count == 0) {
       bool checked = ChessEngine::isInCheck(position, position.whiteToMove);
-      tft->setTextColor(checked ? ST77XX_RED : ST77XX_YELLOW);
-      tft->print(checked ? "CHECKMATE" : "STALEMATE");
+      tft->setTextColor(checked ? ST77XX_RED : ST77XX_YELLOW, ST77XX_BLACK);
+      tft->print(checked ? "CHECKMATE      " : "STALEMATE      ");
     } else {
-      tft->setTextColor(ST77XX_YELLOW);
-      tft->print("DRAW (50-M)");
+      tft->setTextColor(ST77XX_YELLOW, ST77XX_BLACK);
+      tft->print("DRAW (50-M)    ");
     }
   } else if (thinking) {
-    tft->setTextColor(ST77XX_YELLOW);
-    tft->print("AI THINKING...");
+    tft->setTextColor(ST77XX_YELLOW, ST77XX_BLACK);
+    tft->print("AI THINKING... ");
   } else {
-    tft->setTextColor(ST77XX_CYAN);
-    tft->print(position.whiteToMove == humanPlaysWhite ? "YOUR TURN" : "AI TURN");
-    if (ChessEngine::isInCheck(position, position.whiteToMove)) {
-      tft->setCursor(PANEL_X + 8, PANEL_Y + 42);
-      tft->setTextColor(ST77XX_RED);
-      tft->print("CHECK!");
-    }
+    tft->setTextColor(ST77XX_CYAN, ST77XX_BLACK);
+    tft->print(position.whiteToMove == humanPlaysWhite ? "YOUR TURN      "
+                                                       : "AI TURN        ");
+  }
+
+  tft->setCursor(PANEL_X + 8, PANEL_Y + 42);
+  if (!gameOver && !thinking &&
+      ChessEngine::isInCheck(position, position.whiteToMove)) {
+    tft->setTextColor(ST77XX_RED, ST77XX_BLACK);
+    tft->print("CHECK!  ");
+  } else {
+    tft->setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+    tft->print("        ");
   }
 
   int middleX = PANEL_X + 95;
-  tft->setTextColor(ST77XX_WHITE);
+  tft->setTextColor(ST77XX_WHITE, ST77XX_BLACK);
   tft->setCursor(middleX, PANEL_Y + 8);
-  tft->print(humanPlaysWhite ? "W: YOU" : "W: AI");
+  tft->print(humanPlaysWhite ? "W: YOU" : "W: AI ");
   tft->setCursor(middleX, PANEL_Y + 23);
-  tft->print(humanPlaysWhite ? "B: AI" : "B: YOU");
+  tft->print(humanPlaysWhite ? "B: AI " : "B: YOU");
 
   int buttonX = PANEL_X + 155;
-  
-  tft->drawRoundRect(buttonX, PANEL_Y + 6, 78, 30, 4, ST77XX_CYAN);
-  tft->setTextColor(ST77XX_WHITE);
+  tft->setTextColor(ST77XX_WHITE, ST77XX_BLACK);
   tft->setCursor(buttonX + 22, PANEL_Y + 17);
   tft->print("MENU");
-
-  tft->drawRoundRect(buttonX, PANEL_Y + 42, 78, 30, 4, ST77XX_YELLOW);
   tft->setCursor(buttonX + 16, PANEL_Y + 53);
   tft->print("LVL ");
   tft->print(aiDepth);
+  tft->print(" ");
 }
 
 void ChessBoard::drawFirstMoveSelection() {
   const int x = 20;
-  const int y = 70;
+  const int y = 70 + BOARD_Y;
   const int w = 200;
   const int h = 180;
 

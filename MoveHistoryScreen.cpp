@@ -166,7 +166,10 @@ bool MoveHistoryScreen::handleTouch(const TouchPoint &point) {
       if (point.x >= 43 && point.x < 111) {
         bool undone = game->undoLastMove();
         confirmUndo = false;
-        if (undone) return Navigation::returnTo(*game);
+        if (undone) {
+          game->invalidatePanel();
+          return Navigation::returnTo(*game);
+        }
       } else if (point.x >= 129 && point.x < 197) {
         confirmUndo = false;
       }
@@ -187,8 +190,10 @@ bool MoveHistoryScreen::handleTouch(const TouchPoint &point) {
         firstMoveNumber = 0;
       return true;
     }
-    if (point.x >= 78 && point.x < 138)
+    if (point.x >= 78 && point.x < 138) {
+      game->invalidatePanel();
       return Navigation::goBack();
+    }
     if (point.x >= 142 && point.x < 206) {
       if (!game->canUndoLastMove()) return false;
       confirmUndo = true;

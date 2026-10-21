@@ -121,16 +121,19 @@ bool GameScreen::handleTouch(const TouchPoint &point) {
   if (showFirstMoveSelection) {
     if (chessBoard.isPlayerFirstButton(x, y)) {
       showFirstMoveSelection = false;
+      chessBoard.clearDisplay();
       startNewGame(true);
       return true;
     }
     if (chessBoard.isAIFirstButton(x, y)) {
       showFirstMoveSelection = false;
+      chessBoard.clearDisplay();
       startNewGame(false);
       return true;
     }
     if (chessBoard.isCancelNewGameButton(x, y)) {
       showFirstMoveSelection = false;
+      chessBoard.clearDisplay();
       return true;
     }
     return false;
@@ -150,6 +153,10 @@ bool GameScreen::handleTouch(const TouchPoint &point) {
 
 void GameScreen::requestNewGame() {
   showFirstMoveSelection = true;
+}
+
+void GameScreen::invalidatePanel() {
+  chessBoard.invalidatePanel();
 }
 
 uint16_t GameScreen::moveHistoryCount() const {

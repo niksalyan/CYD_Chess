@@ -41,11 +41,14 @@ public:
   
   void drawPanel(const ChessPosition &position, uint8_t aiDepth,
                  bool gameOver, bool thinking, bool humanPlaysWhite);
+  void invalidatePanel();
+  void clearDisplay();
 
   void drawFirstMoveSelection();
 
 private:
   Adafruit_ST7789 *tft;
+  bool panelBackgroundDrawn = false;
   void drawBoard(const ChessPosition &position, int selectedSquare,
                  const ChessMove *legalMoves, uint8_t legalMoveCount,
                  const ChessMove &lastMove, bool humanPlaysWhite);
