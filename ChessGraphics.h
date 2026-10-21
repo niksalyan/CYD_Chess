@@ -1,7 +1,7 @@
 #ifndef CHESS_GRAPHICS_H
 #define CHESS_GRAPHICS_H
 
-#include <Adafruit_ILI9341.h>
+#include <Adafruit_ST7789.h>
 #include "ChessEngine.h"
 #include "ChessPieceAtlas.h"
 
@@ -11,7 +11,7 @@ namespace ChessGraphics {
   // x, y: pixel coordinates (center of the piece)
   // size: radius in pixels
   // tft: display object to draw on
-  void drawPiece(Adafruit_ILI9341 &tft, char piece, int x, int y, int size);
+  void drawPiece(Adafruit_ST7789 &tft, char piece, int x, int y, int size);
 }
 
 #endif

@@ -15,13 +15,13 @@ namespace {
   const int CALIBRATION_BUTTON_Y = 198;
   const int BACK_BUTTON_Y = 263;
 
-  void drawMenuCard(Adafruit_ILI9341 &display, int y, uint16_t accent,
+  void drawMenuCard(Adafruit_ST7789 &display, int y, uint16_t accent,
                     const char *title, const char *subtitle) {
     display.fillRoundRect(CARD_X, y, CARD_W, CARD_H, 6, CARD_BACKGROUND);
     display.drawRoundRect(CARD_X, y, CARD_W, CARD_H, 6, accent);
     display.fillRoundRect(CARD_X + 7, y + 10, 4, 28, 2, accent);
     display.setTextSize(1);
-    display.setTextColor(ILI9341_WHITE);
+    display.setTextColor(ST77XX_WHITE);
     display.setCursor(CARD_X + 20, y + 10);
     display.print(title);
     display.setTextColor(0xA514);
@@ -39,7 +39,7 @@ MenuScreen &MenuScreen::instance() {
   return menu;
 }
 
-void MenuScreen::begin(Adafruit_ILI9341 &tft, GameScreen &gameScreen) {
+void MenuScreen::begin(Adafruit_ST7789 &tft, GameScreen &gameScreen) {
   display = &tft;
   game = &gameScreen;
   MoveHistoryScreen::instance().begin(tft, gameScreen);
@@ -52,24 +52,24 @@ void MenuScreen::draw() {
   display->setTextWrap(false);
   display->fillRect(0, 0, display->width(), 68, 0x1082);
   display->setTextSize(1);
-  display->setTextColor(ILI9341_CYAN);
+  display->setTextColor(ST77XX_CYAN);
   display->setCursor(20, 15);
   display->print("CYD CHESS");
   display->setTextSize(2);
-  display->setTextColor(ILI9341_WHITE);
+  display->setTextColor(ST77XX_WHITE);
   display->setCursor(20, 34);
   display->print("MENU");
 
-  drawMenuCard(*display, RESET_BUTTON_Y, ILI9341_RED,
+  drawMenuCard(*display, RESET_BUTTON_Y, ST77XX_RED,
                "NEW GAME", "Start a fresh match");
-  drawMenuCard(*display, HISTORY_BUTTON_Y, ILI9341_YELLOW,
+  drawMenuCard(*display, HISTORY_BUTTON_Y, ST77XX_YELLOW,
                "MOVE HISTORY", "Review moves this game");
-  drawMenuCard(*display, CALIBRATION_BUTTON_Y, ILI9341_CYAN,
+  drawMenuCard(*display, CALIBRATION_BUTTON_Y, ST77XX_CYAN,
                "TOUCH CALIBRATION", "Adjust screen touch");
 
   display->fillRoundRect(CARD_X, BACK_BUTTON_Y, CARD_W, 40, 6, CARD_BACKGROUND);
   display->drawRoundRect(CARD_X, BACK_BUTTON_Y, CARD_W, 40, 6, 0x7BEF);
-  display->setTextColor(ILI9341_WHITE);
+  display->setTextColor(ST77XX_WHITE);
   display->setCursor(108, BACK_BUTTON_Y + 16);
   display->print("BACK");
 }

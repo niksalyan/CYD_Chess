@@ -39,7 +39,7 @@ TouchCalibrationScreen &TouchCalibrationScreen::instance() {
   return screen;
 }
 
-void TouchCalibrationScreen::begin(Adafruit_ILI9341 &tft) {
+void TouchCalibrationScreen::begin(Adafruit_ST7789 &tft) {
   display = &tft;
 
   Preferences preferences;
@@ -112,20 +112,20 @@ void TouchCalibrationScreen::draw() {
   display->fillScreen(SCREEN_BACKGROUND);
   display->setTextWrap(false);
   display->setTextSize(2);
-  display->setTextColor(ILI9341_WHITE);
+  display->setTextColor(ST77XX_WHITE);
   display->setCursor(24, 16);
   display->print("TOUCH CALIBRATION");
 
   display->setTextSize(1);
   display->setCursor(26, 49);
   if (storageError) {
-    display->setTextColor(ILI9341_RED);
+    display->setTextColor(ST77XX_RED);
     display->print("Invalid samples or save failed. Retry.");
   } else if (targetIndex < 4) {
-    display->setTextColor(ILI9341_WHITE);
+    display->setTextColor(ST77XX_WHITE);
     display->print("Tap the center of each target.");
   } else {
-    display->setTextColor(ILI9341_GREEN);
+    display->setTextColor(ST77XX_GREEN);
     display->print("Calibration saved.");
   }
 
@@ -141,9 +141,9 @@ void TouchCalibrationScreen::draw() {
     };
     int x = targetX[targetIndex];
     int y = targetY[targetIndex];
-    display->drawCircle(x, y, 12, ILI9341_YELLOW);
-    display->drawFastHLine(x - 18, y, 37, ILI9341_YELLOW);
-    display->drawFastVLine(x, y - 18, 37, ILI9341_YELLOW);
+    display->drawCircle(x, y, 12, ST77XX_YELLOW);
+    display->drawFastHLine(x - 18, y, 37, ST77XX_YELLOW);
+    display->drawFastVLine(x, y - 18, 37, ST77XX_YELLOW);
   }
 }
 

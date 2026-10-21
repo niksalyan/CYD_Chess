@@ -19,7 +19,7 @@ namespace {
   const uint16_t PANEL_BG = 0x18E3;
 }
 
-void ChessBoard::begin(Adafruit_ILI9341 &display) {
+void ChessBoard::begin(Adafruit_ST7789 &display) {
   tft = &display;
   pixels.begin();
   pixels.setBrightness(144); // Brightness level out of 255
@@ -235,7 +235,7 @@ void ChessBoard::drawPanel(const ChessPosition &position, uint8_t aiDepth,
   tft->setTextWrap(false);
   tft->setTextSize(1);
   
-  tft->setTextColor(ILI9341_WHITE);
+  tft->setTextColor(ST77XX_WHITE);
   tft->setCursor(PANEL_X + 8, PANEL_Y + 8);
   tft->print("CYD CHESS");
   tft->drawFastHLine(PANEL_X + 6, PANEL_Y + 20, 75, 0x7BEF);
@@ -246,27 +246,27 @@ void ChessBoard::drawPanel(const ChessPosition &position, uint8_t aiDepth,
     uint8_t count = ChessEngine::getLegalMoves(position, moves, ChessEngine::MAX_MOVES);
     if (count == 0) {
       bool checked = ChessEngine::isInCheck(position, position.whiteToMove);
-      tft->setTextColor(checked ? ILI9341_RED : ILI9341_YELLOW);
+      tft->setTextColor(checked ? ST77XX_RED : ST77XX_YELLOW);
       tft->print(checked ? "CHECKMATE" : "STALEMATE");
     } else {
-      tft->setTextColor(ILI9341_YELLOW);
+      tft->setTextColor(ST77XX_YELLOW);
       tft->print("DRAW (50-M)");
     }
   } else if (thinking) {
-    tft->setTextColor(ILI9341_YELLOW);
+    tft->setTextColor(ST77XX_YELLOW);
     tft->print("AI THINKING...");
   } else {
-    tft->setTextColor(ILI9341_CYAN);
+    tft->setTextColor(ST77XX_CYAN);
     tft->print(position.whiteToMove == humanPlaysWhite ? "YOUR TURN" : "AI TURN");
     if (ChessEngine::isInCheck(position, position.whiteToMove)) {
       tft->setCursor(PANEL_X + 8, PANEL_Y + 42);
-      tft->setTextColor(ILI9341_RED);
+      tft->setTextColor(ST77XX_RED);
       tft->print("CHECK!");
     }
   }
 
   int middleX = PANEL_X + 95;
-  tft->setTextColor(ILI9341_WHITE);
+  tft->setTextColor(ST77XX_WHITE);
   tft->setCursor(middleX, PANEL_Y + 8);
   tft->print(humanPlaysWhite ? "W: YOU" : "W: AI");
   tft->setCursor(middleX, PANEL_Y + 23);
@@ -274,12 +274,12 @@ void ChessBoard::drawPanel(const ChessPosition &position, uint8_t aiDepth,
 
   int buttonX = PANEL_X + 155;
   
-  tft->drawRoundRect(buttonX, PANEL_Y + 6, 78, 30, 4, ILI9341_CYAN);
-  tft->setTextColor(ILI9341_WHITE);
+  tft->drawRoundRect(buttonX, PANEL_Y + 6, 78, 30, 4, ST77XX_CYAN);
+  tft->setTextColor(ST77XX_WHITE);
   tft->setCursor(buttonX + 22, PANEL_Y + 17);
   tft->print("MENU");
 
-  tft->drawRoundRect(buttonX, PANEL_Y + 42, 78, 30, 4, ILI9341_YELLOW);
+  tft->drawRoundRect(buttonX, PANEL_Y + 42, 78, 30, 4, ST77XX_YELLOW);
   tft->setCursor(buttonX + 16, PANEL_Y + 53);
   tft->print("LVL ");
   tft->print(aiDepth);
@@ -292,12 +292,12 @@ void ChessBoard::drawFirstMoveSelection() {
   const int h = 180;
 
   tft->fillRoundRect(x, y, w, h, 10, 0x0861);
-  tft->drawRoundRect(x, y, w, h, 10, ILI9341_CYAN);
+  tft->drawRoundRect(x, y, w, h, 10, ST77XX_CYAN);
   tft->fillRoundRect(x + 2, y + 2, w - 4, 36, 8, 0x10A2);
 
   tft->setTextWrap(false);
   tft->setTextSize(1);
-  tft->setTextColor(ILI9341_WHITE);
+  tft->setTextColor(ST77XX_WHITE);
   tft->setCursor(x + 76, y + 15);
   tft->print("NEW GAME");
 
@@ -307,22 +307,22 @@ void ChessBoard::drawFirstMoveSelection() {
 
   const int cardY = y + 54;
   tft->fillRoundRect(x + 8, cardY, 88, 72, 6, 0x2124);
-  tft->drawRoundRect(x + 8, cardY, 88, 72, 6, ILI9341_CYAN);
+  tft->drawRoundRect(x + 8, cardY, 88, 72, 6, ST77XX_CYAN);
   ChessGraphics::drawPiece(*tft, 'K', x + 52, cardY + 19, 24);
-  tft->setTextColor(ILI9341_WHITE);
+  tft->setTextColor(ST77XX_WHITE);
   tft->setCursor(x + 34, cardY + 43);
   tft->print("PLAYER");
-  tft->setTextColor(ILI9341_CYAN);
+  tft->setTextColor(ST77XX_CYAN);
   tft->setCursor(x + 37, cardY + 56);
   tft->print("WHITE");
 
   tft->fillRoundRect(x + 104, cardY, 88, 72, 6, 0x2124);
-  tft->drawRoundRect(x + 104, cardY, 88, 72, 6, ILI9341_YELLOW);
+  tft->drawRoundRect(x + 104, cardY, 88, 72, 6, ST77XX_YELLOW);
   ChessGraphics::drawPiece(*tft, 'k', x + 148, cardY + 19, 24);
-  tft->setTextColor(ILI9341_WHITE);
+  tft->setTextColor(ST77XX_WHITE);
   tft->setCursor(x + 138, cardY + 43);
   tft->print("AI");
-  tft->setTextColor(ILI9341_YELLOW);
+  tft->setTextColor(ST77XX_YELLOW);
   tft->setCursor(x + 133, cardY + 56);
   tft->print("BLACK");
 

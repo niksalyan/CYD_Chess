@@ -9,7 +9,7 @@ namespace {
   const uint16_t BOARD_LIGHT = 0xBDF7;
   const uint16_t BOARD_DARK = 0x39C7;
 
-  void drawMiniBoard(Adafruit_ILI9341 &display, int centerX, int top) {
+  void drawMiniBoard(Adafruit_ST7789 &display, int centerX, int top) {
     const int squareSize = 32;
     const int boardSize = squareSize * 4;
     int left = centerX - boardSize / 2;
@@ -39,7 +39,7 @@ namespace {
     }
 
     display.drawRoundRect(left - 5, top - 5, boardSize + 10, boardSize + 10,
-                          5, ILI9341_CYAN);
+                          5, ST77XX_CYAN);
   }
 }
 
@@ -52,7 +52,7 @@ SplashScreen &SplashScreen::instance() {
   return screen;
 }
 
-void SplashScreen::begin(Adafruit_ILI9341 &tft, GameScreen &gameScreen) {
+void SplashScreen::begin(Adafruit_ST7789 &tft, GameScreen &gameScreen) {
   display = &tft;
   game = &gameScreen;
 }
@@ -68,12 +68,12 @@ void SplashScreen::draw() {
 
   display->setTextWrap(false);
   display->setTextSize(1);
-  display->setTextColor(ILI9341_CYAN);
+  display->setTextColor(ST77XX_CYAN);
   display->setCursor(centerX - 37, 34);
   display->print("ESP32  |  CYD");
 
   display->setTextSize(2);
-  display->setTextColor(ILI9341_WHITE);
+  display->setTextColor(ST77XX_WHITE);
   display->setCursor(centerX - 54, 52);
   display->print("CYD CHESS");
 
@@ -85,12 +85,12 @@ void SplashScreen::draw() {
   display->print("PLAYER  VS  AI");
 
   display->drawRoundRect(44, 262, display->width() - 88, 34, 7,
-                         ILI9341_CYAN);
-  display->setTextColor(ILI9341_WHITE);
+                         ST77XX_CYAN);
+  display->setTextColor(ST77XX_WHITE);
   display->setCursor(centerX - 39, 275);
   display->print("TAP TO START");
 
-  display->fillCircle(centerX - 5, 308, 2, ILI9341_CYAN);
+  display->fillCircle(centerX - 5, 308, 2, ST77XX_CYAN);
   display->fillCircle(centerX + 5, 308, 2, 0x7BEF);
 }
 

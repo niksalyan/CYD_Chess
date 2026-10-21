@@ -16,7 +16,7 @@
 
 
 
-#include <Adafruit_ILI9341.h>
+#include <Adafruit_ST7789.h>
 #include <Adafruit_NeoPixel.h>
 #include "ChessEngine.h"
 #include "ChessGraphics.h"
@@ -24,7 +24,7 @@
 
 class ChessBoard {
 public:
-  void begin(Adafruit_ILI9341 &display);
+  void begin(Adafruit_ST7789 &display);
   void draw(const ChessPosition &position, int selectedSquare,
             const ChessMove *legalMoves, uint8_t legalMoveCount,
             const ChessMove &lastMove, uint8_t aiDepth,
@@ -45,7 +45,7 @@ public:
   void drawFirstMoveSelection();
 
 private:
-  Adafruit_ILI9341 *tft;
+  Adafruit_ST7789 *tft;
   void drawBoard(const ChessPosition &position, int selectedSquare,
                  const ChessMove *legalMoves, uint8_t legalMoveCount,
                  const ChessMove &lastMove, bool humanPlaysWhite);

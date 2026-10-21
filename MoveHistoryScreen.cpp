@@ -42,7 +42,7 @@ MoveHistoryScreen &MoveHistoryScreen::instance() {
   return screen;
 }
 
-void MoveHistoryScreen::begin(Adafruit_ILI9341 &tft, GameScreen &gameScreen) {
+void MoveHistoryScreen::begin(Adafruit_ST7789 &tft, GameScreen &gameScreen) {
   display = &tft;
   game = &gameScreen;
 }
@@ -58,7 +58,7 @@ void MoveHistoryScreen::drawMove(uint16_t moveNumber, uint16_t firstPly) {
   display->fillRoundRect(ROW_X, ROW_Y + moveNumber * ROW_HEIGHT,
                          ROW_WIDTH, ROW_HEIGHT - 2, 3, ROW_BACKGROUND);
   display->setTextSize(1);
-  display->setTextColor(ILI9341_YELLOW);
+  display->setTextColor(ST77XX_YELLOW);
   display->setCursor(ROW_X + 7, ROW_Y + moveNumber * ROW_HEIGHT + 7);
   display->print(firstMoveNumber + moveNumber + 1);
   display->print('.');
@@ -67,14 +67,14 @@ void MoveHistoryScreen::drawMove(uint16_t moveNumber, uint16_t firstPly) {
   char moveText[8];
   if (game->getRecordedMove(firstPly, recorded)) {
     formatMove(recorded.move, moveText);
-    display->setTextColor(recorded.white ? ILI9341_WHITE : ILI9341_CYAN);
+    display->setTextColor(recorded.white ? ST77XX_WHITE : ST77XX_CYAN);
     display->setCursor(ROW_X + 31, ROW_Y + moveNumber * ROW_HEIGHT + 7);
     display->print(moveText);
   }
 
   if (game->getRecordedMove(firstPly + 1, recorded)) {
     formatMove(recorded.move, moveText);
-    display->setTextColor(recorded.white ? ILI9341_WHITE : ILI9341_CYAN);
+    display->setTextColor(recorded.white ? ST77XX_WHITE : ST77XX_CYAN);
     display->setCursor(ROW_X + 112, ROW_Y + moveNumber * ROW_HEIGHT + 7);
     display->print(moveText);
   }
@@ -86,7 +86,7 @@ void MoveHistoryScreen::draw() {
   display->fillScreen(BACKGROUND);
   display->setTextWrap(false);
   display->setTextSize(2);
-  display->setTextColor(ILI9341_WHITE);
+  display->setTextColor(ST77XX_WHITE);
   display->setCursor(35, 16);
   display->print("MOVE HISTORY");
 
@@ -97,7 +97,7 @@ void MoveHistoryScreen::draw() {
   if (firstMoveNumber > lastPageStart) firstMoveNumber = lastPageStart;
 
   display->setTextSize(1);
-  display->setTextColor(game->moveHistoryTruncated() ? ILI9341_RED : 0xA514);
+  display->setTextColor(game->moveHistoryTruncated() ? ST77XX_RED : 0xA514);
   display->setCursor(18, 49);
   if (game->moveHistoryTruncated()) {
     display->print("History limit reached");
@@ -125,36 +125,36 @@ void MoveHistoryScreen::draw() {
       drawMove(row, (firstMoveNumber + row) * 2);
   }
 
-  display->drawRoundRect(10, BUTTON_Y, 64, BUTTON_HEIGHT, 5, ILI9341_CYAN);
+  display->drawRoundRect(10, BUTTON_Y, 64, BUTTON_HEIGHT, 5, ST77XX_CYAN);
   display->setCursor(30, BUTTON_Y + 15);
-  display->setTextColor(ILI9341_WHITE);
+  display->setTextColor(ST77XX_WHITE);
   display->print("<");
 
-  display->drawRoundRect(78, BUTTON_Y, 60, BUTTON_HEIGHT, 5, ILI9341_YELLOW);
+  display->drawRoundRect(78, BUTTON_Y, 60, BUTTON_HEIGHT, 5, ST77XX_YELLOW);
   display->setCursor(95, BUTTON_Y + 15);
   display->print("BACK");
 
   display->drawRoundRect(142, BUTTON_Y, 64, BUTTON_HEIGHT, 5,
-                         game->canUndoLastMove() ? ILI9341_RED : 0x7BEF);
-  display->setTextColor(game->canUndoLastMove() ? ILI9341_WHITE : 0x7BEF);
+                         game->canUndoLastMove() ? ST77XX_RED : 0x7BEF);
+  display->setTextColor(game->canUndoLastMove() ? ST77XX_WHITE : 0x7BEF);
   display->setCursor(155, BUTTON_Y + 15);
   display->print("UNDO");
 
-  display->drawRoundRect(210, BUTTON_Y, 20, BUTTON_HEIGHT, 5, ILI9341_CYAN);
+  display->drawRoundRect(210, BUTTON_Y, 20, BUTTON_HEIGHT, 5, ST77XX_CYAN);
   display->setCursor(216, BUTTON_Y + 15);
   display->print(">");
 
   if (confirmUndo) {
     display->fillRoundRect(24, 103, 192, 94, 8, 0x0841);
-    display->drawRoundRect(24, 103, 192, 94, 8, ILI9341_YELLOW);
+    display->drawRoundRect(24, 103, 192, 94, 8, ST77XX_YELLOW);
     display->setTextSize(1);
-    display->setTextColor(ILI9341_WHITE);
+    display->setTextColor(ST77XX_WHITE);
     display->setCursor(48, 120);
     display->print("Undo the last move?");
-    display->drawRoundRect(43, 151, 68, 32, 5, ILI9341_RED);
+    display->drawRoundRect(43, 151, 68, 32, 5, ST77XX_RED);
     display->setCursor(65, 163);
     display->print("UNDO");
-    display->drawRoundRect(129, 151, 68, 32, 5, ILI9341_CYAN);
+    display->drawRoundRect(129, 151, 68, 32, 5, ST77XX_CYAN);
     display->setCursor(149, 163);
     display->print("CANCEL");
   }

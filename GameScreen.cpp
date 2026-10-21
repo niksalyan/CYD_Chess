@@ -18,7 +18,7 @@ GameScreen::GameScreen()
     showFirstMoveSelection(false) {
 }
 
-void GameScreen::begin(Adafruit_ILI9341 &display) {
+void GameScreen::begin(Adafruit_ST7789 &display) {
   chessBoard.begin(display);
   startNewGame(true);
 }

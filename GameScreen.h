@@ -1,7 +1,7 @@
 #ifndef GAME_SCREEN_H
 #define GAME_SCREEN_H
 
-#include <Adafruit_ILI9341.h>
+#include <Adafruit_ST7789.h>
 
 #include "AIEngine.h"
 #include "ChessBoard.h"
@@ -15,7 +15,7 @@ struct RecordedMove {
 class GameScreen : public Screen {
 public:
   GameScreen();
-  void begin(Adafruit_ILI9341 &display);
+  void begin(Adafruit_ST7789 &display);
   void draw();
   bool handleTouch(const TouchPoint &point);
   bool update();

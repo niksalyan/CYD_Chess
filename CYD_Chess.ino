@@ -1,6 +1,6 @@
 #include <SPI.h>
 #include <Adafruit_GFX.h>
-#include <Adafruit_ILI9341.h>
+#include <Adafruit_ST7789.h>
 #include <XPT2046_Touchscreen.h>
 
 #include "GameScreen.h"
@@ -19,6 +19,10 @@
 #define TFT_CS 15
 #define TFT_DC 2
 #define TFT_RST -1
+#define TFT_BL 21
+#define TFT_SCLK 14
+#define TFT_MISO 12
+#define TFT_MOSI 13
 
 static const int TOUCH_X_MIN = 200;
 static const int TOUCH_X_MAX = 3900;
@@ -28,14 +32,30 @@ static const bool TOUCH_SWAP_XY = false;
 static const bool TOUCH_INVERT_X = false;
 static const bool TOUCH_INVERT_Y = false;
 
-SPIClass touchSPI = SPIClass(VSPI);
-SPIClass tftSPI = SPIClass(HSPI);
-Adafruit_ILI9341 tft(&tftSPI, TFT_DC, TFT_CS, TFT_RST);
+SPIClass touchSPI(VSPI);
+SPIClass tftSPI(HSPI);
+Adafruit_ST7789 tft(&tftSPI, TFT_CS, TFT_DC, TFT_RST);
 XPT2046_Touchscreen touch(XPT2046_CS, XPT2046_IRQ);
 GameScreen gameScreen;
 
 static bool previousTouch = false;
 static uint32_t lastTouchMillis = 0;
+
+static void setRotationWithHorizontalFlip(uint8_t rotation) {
+  tft.setRotation(rotation);
+
+  uint8_t madctl;
+  switch (rotation & 3) {
+    case 0:  madctl = 0xC0; break;
+    case 1:  madctl = 0xA0; break;
+    case 2:  madctl = 0x00; break;
+    default: madctl = 0x60; break;
+  }
+
+  // Toggle horizontal address direction for this CYD panel.
+  madctl ^= 0x40;
+  tft.sendCommand(0x36, &madctl, 1);
+}
 
 static int mapTouchAxis(int value, int low, int high, int extent, bool invert) {
   if (high <= low) return 0;
@@ -62,8 +82,8 @@ static bool readTouchPoint(TouchPoint &touchPoint) {
 static bool enterCalibrationIfHeldAtStartup() {
   if (!touch.touched()) return false;
 
-  tft.fillScreen(ILI9341_BLACK);
-  tft.setTextColor(ILI9341_WHITE);
+  tft.fillScreen(ST77XX_BLACK);
+  tft.setTextColor(ST77XX_WHITE);
   tft.setTextSize(2);
   tft.setCursor(22, 120);
   tft.print("Hold for touch");
@@ -84,15 +104,19 @@ static bool enterCalibrationIfHeldAtStartup() {
 
 void setup() {
   Serial.begin(115200);
+
+  pinMode(TFT_BL, OUTPUT);
+  digitalWrite(TFT_BL, HIGH);
+
+  tftSPI.begin(TFT_SCLK, TFT_MISO, TFT_MOSI, TFT_CS);
   touchSPI.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
   touch.begin(touchSPI);
   touch.setRotation(0);
 
-  tftSPI.begin();
-  tft.begin();
-  pinMode(21, OUTPUT);
-  digitalWrite(21, HIGH);
-  tft.setRotation(0);
+  tft.init(240, 320);
+  tft.setRotation(2);
+  //setRotationWithHorizontalFlip(2);
+  tft.invertDisplay(false);
 
   gameScreen.begin(tft);
   MenuScreen::instance().begin(tft, gameScreen);

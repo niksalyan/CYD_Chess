@@ -25,7 +25,7 @@ namespace ChessGraphics {
   }
 
   void drawSpriteAtlas(
-    Adafruit_ILI9341 &tft,
+    Adafruit_ST7789 &tft,
     int spriteIndex,
     int x,
     int y)
@@ -55,7 +55,7 @@ namespace ChessGraphics {
 }
 
 
-  void drawPiece(Adafruit_ILI9341 &tft, char piece, int x, int y, int size) {
+  void drawPiece(Adafruit_ST7789 &tft, char piece, int x, int y, int size) {
     int spriteIndex = atlasIndexForPiece(piece);
     if (spriteIndex >= 0) {
       drawSpriteAtlas(tft, spriteIndex, x, y);
